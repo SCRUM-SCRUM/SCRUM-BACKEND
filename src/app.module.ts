@@ -1,33 +1,42 @@
+// app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './users/user.entity';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { TaskModule } from './task/task.module';
+import { NotificationModule } from './notifications/notification.module';
+import { EventsGateway } from './events/events.gateway';
+import { User } from './users/user.entity';
+import { Notification } from './notifications/entities/notification.entity';
+import { Task } from './task/entities/task.entity';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env', // Optional: specify your env file path
+      envFilePath: '.env',
     }),
-    TypeOrmModule.forRootAsync({
-      useFactory: () => ({
-        type: 'postgres',
-        host: process.env.DB_HOST || 'localhost',
-        port: parseInt(process.env.DB_PORT || '5432', 10),
-        username: process.env.DB_USERNAME || 'postgres',
-        password: process.env.DB_PASSWORD || 'postgres',
-        database: process.env.DB_DATABASE || 'scrum',
-        entities: [User],
-        synchronize: true, // Set to false in production
-        logging: process.env.NODE_ENV === 'development', // Enable logging in dev
-      }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432', 10),
+      username: process.env.DB_USERNAME || 'postgres',
+      password: process.env.DB_PASSWORD || 'postgres',
+      database: process.env.DB_DATABASE || 'scrum',
+      entities: [User, Notification, Task],
+      synchronize: true,
+      logging: process.env.NODE_ENV === 'development',
     }),
     AuthModule,
     UsersModule,
     DashboardModule,
+    TaskModule,
+    NotificationModule, 
   ],
+  providers: [EventsGateway],
 })
 export class AppModule {}

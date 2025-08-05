@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Request, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Request, UseGuards, Get, Query, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -14,8 +14,15 @@ export class AuthController {
   }
 
   @Post('register')
-  @UseGuards(AuthGuard('local'))
   async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto.name, registerDto.email, registerDto.password, registerDto.role);
+    return this.authService.register(registerDto);
+  }
+
+  @Get('verify')
+  async verifyEmail(@Query('token') token: string) {
+    if (!token) {
+      throw new BadRequestException('Token is required for email verification.');
+    }
+    return this.authService.verifyEmail(token);
   }
 }

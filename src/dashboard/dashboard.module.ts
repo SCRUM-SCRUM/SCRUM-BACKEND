@@ -1,12 +1,20 @@
 import { Module } from '@nestjs/common';
-import { DashboardController } from './dashboard.controller';
 import { DashboardService } from './dashboard.service';
+import { DashboardController } from './dashboard.controller';
+import { TaskModule } from '../task/task.module';
+import { UsersModule } from '../users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from '../users/user.entity';
+import { Meeting } from './entities/meeting.entity';
+import { MoreThan } from 'typeorm';
+
+
 
 @Module({
+  imports: [
+    TaskModule, 
+    UsersModule, 
+    TypeOrmModule.forFeature([ Meeting]),],
   controllers: [DashboardController],
   providers: [DashboardService],
-  imports: [TypeOrmModule.forFeature([User])],  
 })
 export class DashboardModule {}

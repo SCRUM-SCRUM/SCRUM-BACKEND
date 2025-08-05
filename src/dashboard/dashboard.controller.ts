@@ -1,17 +1,35 @@
-import { Controller, Get, UseGuards, Req } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
-import { DashboardDto } from './dto/dashboard.dto';
-import { Request } from 'express'; 
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CreateMeetingDto } from './dto/create-meeting.dto';
+import { MeetingResponseDto } from './dto/meeting-response.dto';
 
 @Controller('dashboard')
-@UseGuards(AuthGuard('local')) 
+@UseGuards(JwtAuthGuard)
 export class DashboardController {
-  constructor(private dashboardService: DashboardService) {}
+  constructor(private readonly dashboardService: DashboardService) {}
 
-  @Get()
-  async getDashboard(@Req() req: Request) {
-    const userId = Number(req.user?.id); // Make sure 'user' is attached by your guard
-    return this.dashboardService.getDashboard(userId);
+  @Get('metrics')
+  getMetrics(@Request() req) {
+    return this.dashboardService.getMetrics(req.user.userId);
+  }
+
+  @Get('meetings')
+  getMeetings(): Promise<MeetingResponseDto[]> {
+    return this.dashboardService.getUpcomingMeetings();
+  }
+
+  @Post('meetings')
+  addMeeting(
+    @Body() dto: CreateMeetingDto,
+  ): Promise<MeetingResponseDto> {
+    return this.dashboardService.addMeeting(dto);
   }
 }

@@ -1,36 +1,69 @@
-// src/dashboard/dashboard.service.ts
 import { Injectable } from '@nestjs/common';
+import { TaskService } from '../task/task.service';
+import { UsersService } from '../users/users.service';
+import { DashboardMetricsDto } from './dto/dashboard-metrics.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from '../users/user.entity';
+import { MoreThan, Repository } from 'typeorm';
+import { Meeting } from './entities/meeting.entity';
+import { CreateMeetingDto } from './dto/create-meeting.dto';
+import { MeetingResponseDto } from './dto/meeting-response.dto';
 
 @Injectable()
 export class DashboardService {
   constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private readonly taskService: TaskService,
+    private readonly userService: UsersService,
+    @InjectRepository(Meeting)
+    private readonly meetingRepo: Repository<Meeting>,
   ) {}
 
-  async getDashboard(userId: number) {
-    // Get user info
-    const user = await this.usersRepository.findOne({ where: { id: userId } });
-    
-    // Get metrics
-    const metrics = await this.getMetrics(userId);
-    
+  async getMetrics(userId: string): Promise<DashboardMetricsDto> {
+    const [completedTasks, inProgressTasks, teamMembers] = await Promise.all([
+      this.taskService.countByStatus('Done'),
+      this.taskService.countByStatus('In Progress'),
+      this.userService.countAll(),
+    ]);
+
+
     return {
-      user,
-      metrics
+      completedTasks,
+      inProgressTasks,
+      teamMembers,
+      //activeWorkspaces: 0,
+      //totalWorkspaces: 0,
     };
   }
 
-  private async getMetrics(userId: number) {
-    return [
-      { name: 'Active Workspaces', count: 5 },
-      { name: 'Total Workspaces', count: 8 },
-      { name: 'Completed Tasks', count: 12 },
-      { name: 'In Progress', count: 3 },
-      { name: 'Team Members', count: 4 }
-    ];
+  async getUpcomingMeetings(): Promise<MeetingResponseDto[]> {
+    const now = new Date();
+    const meetings = await this.meetingRepo.find({
+      where: {
+        dateTime: MoreThan(now),
+      },
+      order: { dateTime: 'ASC' },
+    });
+
+    return meetings.map((m) => ({
+      id: m.id,
+      title: m.title,
+      description: m.description,
+      dateTime: m.dateTime,
+      link: m.link,
+      createdAt: m.createdAt,
+    }));
+  }
+
+  async addMeeting(dto: CreateMeetingDto): Promise<MeetingResponseDto> {
+    const meeting = this.meetingRepo.create({ ...dto });
+    const saved = await this.meetingRepo.save(meeting);
+
+    return {
+      id: saved.id,
+      title: saved.title,
+      description: saved.description,
+      dateTime: saved.dateTime,
+      link: saved.link,
+      createdAt: saved.createdAt,
+    };
   }
 }

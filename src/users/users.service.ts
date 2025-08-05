@@ -22,4 +22,8 @@ export class UsersService {
   async remove(id: number) {
     await this.usersRepository.delete(id);
   }
+
+  async countAll(): Promise<number> {
+    return this.usersRepository.count();
+  }
 }
