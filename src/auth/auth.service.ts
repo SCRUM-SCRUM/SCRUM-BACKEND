@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterDto } from './dto/register.dto';
 import { MailService } from './mail/mail.service';
+import { isEmail } from 'class-validator';
 
 @Injectable()
 export class AuthService {
@@ -62,6 +63,7 @@ export class AuthService {
           id: user.id,
           email: user.email,
           name: user.name || 'Unknown',
+          isEmailVerified: user.isEmailVerified
         },
       };
     } catch (error) {
@@ -118,7 +120,15 @@ export class AuthService {
       user.isEmailVerified = true;
       await this.usersRepository.save(user);
 
-      return { message: 'Email verified successfully.'};
+      return { 
+        message: 'Email verified successfully.',
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          isEmailVerified: true
+        }
+      };
     }
     catch (error) {
       throw new BadRequestException('Invalid or expired token');
