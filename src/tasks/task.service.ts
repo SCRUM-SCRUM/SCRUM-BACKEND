@@ -51,6 +51,13 @@ export class TaskService {
     await this.taskRepository.save(task);
      this.taskGateway.broadcastTaskUpdate('task.deleted', { id: taskId });
   }
+
+async countByStatus(status: string): Promise<number> {
+  return this.taskRepository.count({
+    where: { status: status as any, isDeleted: false }, // cast status to the correct enum type
+  });
+}
+
 }
 
 

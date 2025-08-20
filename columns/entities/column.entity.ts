@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
-import { Workspace } from '../../workspace/entities/workspace.entity';
-import { Task } from '../../tasks/entities/task.entity';
+import { Workspace } from '@/workspace/entities/workspace.entity';
+import { Task } from '@/tasks/entities/task.entity';
 
 export enum ColumnName {
   TO_DO = 'To Do',

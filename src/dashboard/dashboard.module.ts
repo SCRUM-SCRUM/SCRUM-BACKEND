@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { DashboardController } from './dashboard.controller';
-import { TaskModule } from '../task/task.module';
+import { TaskModule } from '../tasks/task.module';
 import { UsersModule } from '../users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Meeting } from './entities/meeting.entity';

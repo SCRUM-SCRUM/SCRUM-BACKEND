@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column as DbColumn, ManyToOne, OneToMany } from 'typeorm';
 import { ColumnEntity } from '../../columns/entities/column.entity';
 import { Subtask } from '../../subtask/entities/subtask.entity';
-import { User } from '../../user/user.entity';
+import { User } from '../../users/user.entity';
 import { Comment } from '../../comments/comment.entity';
 
 export enum TaskStatus {

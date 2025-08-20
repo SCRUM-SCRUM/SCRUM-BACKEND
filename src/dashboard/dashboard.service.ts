@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { TaskService } from '../task/task.service';
+import { TaskService } from '../tasks/task.service';
 import { UsersService } from '../users/users.service';
 import { DashboardMetricsDto } from './dto/dashboard-metrics.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -29,8 +29,8 @@ export class DashboardService {
       completedTasks,
       inProgressTasks,
       teamMembers,
-      //activeWorkspaces: 0,
-      //totalWorkspaces: 0,
+      activeWorkspaces: 0,
+      totalWorkspaces: 0,
     };
   }
 
@@ -54,7 +54,10 @@ export class DashboardService {
   }
 
   async addMeeting(dto: CreateMeetingDto): Promise<MeetingResponseDto> {
-    const meeting = this.meetingRepo.create({ ...dto });
+    const meeting = this.meetingRepo.create({ 
+      ...dto, 
+       isRecurring: dto.isRecurring ?? false,
+      });
     const saved = await this.meetingRepo.save(meeting);
 
     return {

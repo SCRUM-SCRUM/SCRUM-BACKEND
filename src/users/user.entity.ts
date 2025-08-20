@@ -1,5 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Notification } from '../notifications/entities/notification.entity';
+import { Task } from '../tasks/entities/task.entity';
+import { Comment } from '../comments/comment.entity'; 
 
 @Entity()
 export class User {
@@ -28,5 +30,11 @@ export class User {
   createdAt: Date;
 
   @OneToMany(() => Notification, notification => notification.recipient)
-notifications: Notification[];
+  notifications: Notification[];
+
+  @OneToMany(() => Comment, comment => comment.user) 
+  comments: Comment[]; 
+
+  @OneToMany(() => Task, task => task.assigneeUser) 
+  tasks: Task[]; 
 }

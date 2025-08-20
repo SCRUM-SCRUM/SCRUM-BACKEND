@@ -1,6 +1,6 @@
 import { Entity,PrimaryGeneratedColumn,Column,ManyToOne,CreateDateColumn, UpdateDateColumn} from 'typeorm';
 import { Task } from '../tasks/entities/task.entity';
-import { User } from '../user/user.entity';
+import { User } from '../users/user.entity';
 import { CalendarTask } from '../entities/calendartask.entity';
 
 @Entity()

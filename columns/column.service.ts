@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ColumnEntity, ColumnName } from './entities/column.entity';
 import { Repository } from 'typeorm';
-import { Workspace } from '../workspace/entities/workspace.entity'; // 
+import { Workspace } from '@/workspace/entities/workspace.entity';
 import { ColumnGateway } from './column.gateway';
 
 @Injectable()

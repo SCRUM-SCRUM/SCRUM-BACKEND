@@ -18,14 +18,18 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Redirect unauthenticated access to dashboard
   app.use('/dashboard', (req, res, next) => {
-    if (!req.isAuthenticated || !req.isAuthenticated()) {
-      return res.redirect('/auth/login?redirect=/dashboard');
-    }
+    // if (!req.isAuthenticated || !req.isAuthenticated()) {
+    //   return res.redirect('/auth/login?redirect=/dashboard');
+    // }
     next();
   });
-
+//  app.use('/dashboard', (req, res, next) => {
+//     if (!req.isAuthenticated || !req.isAuthenticated()) {
+//       return res.redirect('/dashboard');
+//     }
+//     next();
+//   });
   await app.listen(3000);
 }
 bootstrap();

@@ -4,7 +4,7 @@ import { Notification } from './entities/notification.entity';
 import { Repository, LessThan, In } from 'typeorm';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { User } from '../users/user.entity';
-import { Task } from '../task/entities/task.entity';
+import { Task } from '../tasks/entities/task.entity';
 
 @Injectable()
 export class NotificationService {
@@ -25,32 +25,33 @@ export class NotificationService {
 
   async findUserNotifications(userId: string, limit = 20, cursor?: Date) {
     const notifications = await this.notificationRepo.find({
-      where: {
-        recipient: { id: Number(userId) },
-        ...(cursor && { createdAt: LessThan(cursor) }),
-      },
-      order: { createdAt: 'DESC' },
-      take: limit,
+        where: {
+            recipient: { id: Number(userId) },
+            ...(cursor && { createdAt: LessThan(cursor) }),
+        },
+        order: { createdAt: 'DESC' },
+        take: limit,
     });
 
     const taskLinks = notifications
-      .filter(notif => notif.link?.startsWith('/tasks/'))
-      .map(notif => notif.link.split('/tasks/')[1]);
+        .filter(notif => notif.link?.startsWith('/tasks/'))
+        .map(notif => notif.link.split('/tasks/')[1]);
 
     const existingTasks = taskLinks.length > 0
-      ? await this.taskRepo.find({ 
-          where: { id: In(taskLinks) }, 
-          select: ['id'] 
-        })
-      : [];
+        ? await this.taskRepo.find({ 
+            where: { id: In(taskLinks.map(Number)) }, // Convert to numbers here as well
+            select: ['id'] 
+          })
+        : [];
 
     const validTaskIds = new Set(existingTasks.map(t => t.id));
 
     return notifications.map(notif => ({
-      ...notif,
-      isValid: !notif.link?.startsWith('/tasks/') || validTaskIds.has(notif.link.split('/tasks/')[1]),
+        ...notif,
+        isValid: !notif.link?.startsWith('/tasks/') || 
+                 validTaskIds.has(Number(notif.link.split('/tasks/')[1])),
     }));
-  }
+}
 
   async unreadCount(userId: string) {
     return this.notificationRepo.count({

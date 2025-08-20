@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { UserRole } from './user-role.enum';
-import { Task } from '../tasks/entities/task.entity';
+import { Task } from '@/tasks/entities/task.entity';
 import { Comment } from 'src/comments/comment.entity';
 
 @Entity()

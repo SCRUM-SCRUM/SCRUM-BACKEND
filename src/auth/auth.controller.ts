@@ -17,16 +17,18 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/user.entity';
-import { MailService } from './mail/mail.service'; // Add this import
+import { MailService } from './mail/mail.service'; 
+import { MeetingResponseDto } from '@/dashboard/dto/meeting-response.dto';
+
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly jwtService: JwtService, // Properly declare
+    private readonly jwtService: JwtService, 
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>, // Properly declare
-    private readonly mailService: MailService // Add MailService
+    private readonly usersRepository: Repository<User>, 
+    private readonly mailService: MailService 
   ) {}
 
   @Post('login')

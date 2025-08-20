@@ -5,4 +5,6 @@ export class MeetingResponseDto {
   dateTime: Date;
   link: string;
   createdAt: Date;
+  isRecurring?: boolean;
+  recurrenceRule?: string; 
 }
