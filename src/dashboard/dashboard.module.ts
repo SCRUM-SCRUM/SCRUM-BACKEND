@@ -6,6 +6,7 @@ import { UsersModule } from '../users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Meeting } from './entities/meeting.entity';
 import { MoreThan } from 'typeorm';
+import { WorkspaceModule } from '@/workspace/workspace.module';
 
 
 
@@ -13,6 +14,7 @@ import { MoreThan } from 'typeorm';
   imports: [
     TaskModule, 
     UsersModule, 
+    WorkspaceModule,
     TypeOrmModule.forFeature([ Meeting]),],
   controllers: [DashboardController],
   providers: [DashboardService],

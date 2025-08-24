@@ -23,6 +23,17 @@ export class WorkspaceService {
     return this.workspaceRepo.save(workspace);
   }
 
+  // In workspace.service.ts
+async countActiveWorkspaces(): Promise<number> {
+  return this.workspaceRepo.count({ 
+    where: { /* your active workspace criteria */ } 
+  });
+}
+
+async countAllWorkspaces(): Promise<number> {
+  return this.workspaceRepo.count();
+}
+
   async findOne(id: number): Promise<Workspace> {
     const workspace = await this.workspaceRepo.findOne({ where: { id }, relations: ['columns', 'columns.tasks'] });
     if (!workspace) {

@@ -7,12 +7,14 @@ import { MoreThan, Repository } from 'typeorm';
 import { Meeting } from './entities/meeting.entity';
 import { CreateMeetingDto } from './dto/create-meeting.dto';
 import { MeetingResponseDto } from './dto/meeting-response.dto';
+import { WorkspaceService } from '../workspace/workspace.service';
 
 @Injectable()
 export class DashboardService {
   constructor(
     private readonly taskService: TaskService,
     private readonly userService: UsersService,
+    private readonly workspaceService: WorkspaceService,
     @InjectRepository(Meeting)
     private readonly meetingRepo: Repository<Meeting>,
   ) {}
@@ -22,6 +24,8 @@ export class DashboardService {
       this.taskService.countByStatus('Done'),
       this.taskService.countByStatus('In Progress'),
       this.userService.countAll(),
+      this.workspaceService.countActiveWorkspaces(),
+      this.workspaceService.countAllWorkspaces(),
     ]);
 
 
