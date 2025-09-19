@@ -10,4 +10,4 @@ export class ColumnController {
   create(@Param('workspaceId') workspaceId: number, @Body('name') name: string): Promise<ColumnEntity> {
     return this.columnService.create(workspaceId, name);
   }
-} 
+}
