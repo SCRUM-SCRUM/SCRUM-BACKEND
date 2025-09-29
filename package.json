@@ -29,20 +29,12 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.5",
-<<<<<<< HEAD
-    "@nestjs/platform-socket.io": "^11.1.5",
-=======
     "@nestjs/platform-socket.io": "^11.1.6",
->>>>>>> master
     "@nestjs/schedule": "^6.0.0",
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/throttler": "^6.4.0",
     "@nestjs/typeorm": "^11.0.0",
-<<<<<<< HEAD
-    "@nestjs/websockets": "^11.1.5",
-=======
     "@nestjs/websockets": "^11.1.6",
->>>>>>> master
     "@types/cache-manager": "^4.0.6",
     "bcrypt": "^6.0.0",
     "cache-manager": "^7.1.0",
@@ -50,10 +42,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
-<<<<<<< HEAD
-=======
     "date-fns": "^4.1.0",
->>>>>>> master
     "dotenv": "^17.2.1",
     "helmet": "^8.1.0",
     "joi": "^18.0.0",

@@ -19,11 +19,7 @@ import { MailService } from './mail/mail.service';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-<<<<<<< HEAD
-        secret: configService.get<string>('JWT_SECRET'),
-=======
          secret: process.env.JWT_SECRET || 'default_secret_key',
->>>>>>> master
         signOptions: { expiresIn: '7d' },
       }),
     }),
