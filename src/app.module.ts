@@ -26,15 +26,12 @@ import { Comment } from './comments/comment.entity';
 import { Notification } from './notifications/entities/notification.entity';
 import { Meeting } from './dashboard/entities/meeting.entity';
 import { NotificationModule } from './notifications/notification.module';
-<<<<<<< HEAD
-=======
 import { CommitmentsModule } from './commitment/commitments.module';
 import { Commitment } from './commitment/commitments.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TeamsModule } from './teams/teams.module';
 
 
->>>>>>> master
 
 @Module({
   imports: [
@@ -48,14 +45,9 @@ import { TeamsModule } from './teams/teams.module';
         host: process.env.DB_HOST || 'localhost',
         port: parseInt(process.env.DB_PORT || '5432'),
         username: process.env.DB_USERNAME || 'postgres',
-<<<<<<< HEAD
-        password: process.env.DB_PASSWORD || '',
-        database: process.env.DB_DATABASE || 'newscrum',
-=======
         password: process.env.DB_PASSWORD || 'damilare',
         database: process.env.DB_DATABASE || 'postgres',
       //  schema: 'scrumflow',
->>>>>>> master
         entities: [
           User,
           Task,
@@ -70,12 +62,8 @@ import { TeamsModule } from './teams/teams.module';
           CalendarUser,
           Comment,
           Notification, 
-<<<<<<< HEAD
-          Meeting
-=======
           Meeting,
           Commitment,
->>>>>>> master
         ],
         synchronize: true,
         logging: process.env.NODE_ENV === 'development',
@@ -91,14 +79,10 @@ import { TeamsModule } from './teams/teams.module';
     SubtaskModule,
     CalendarModule,
     CommentModule,
-    NotificationModule,
-<<<<<<< HEAD
-=======
     CommitmentsModule,
     TeamsModule,
     
     ScheduleModule.forRoot(),
->>>>>>> master
   ],
   providers: [EventsGateway],
 })
