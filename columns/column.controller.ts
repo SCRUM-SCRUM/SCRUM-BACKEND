@@ -1,3 +1,4 @@
+import{ Controller, Post, Param, Body } from '@nestjs/common';
 import { ColumnService } from './column.service';
 import { ColumnEntity } from './entities/column.entity';
 
