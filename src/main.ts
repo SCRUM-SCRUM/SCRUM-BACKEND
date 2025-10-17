@@ -44,12 +44,13 @@ async function bootstrap(): Promise<void> {
 
    app.useWebSocketAdapter(new IoAdapter(app));
 
-  // Start the application
-  const port = process.env.PORT ? Number(process.env.PORT) : 3000;
-  await app.listen(4000, '0.0.0.0');
+    // Start the application (use the env PORT if present)
+  const port = process.env.PORT ? Number(process.env.PORT) : 4000; // default 4000
+  await app.listen(port, '0.0.0.0');
 
   // Log success message
   console.log(`Server running at http://localhost:${port}/api`);
+
 }
 
 // Bootstrap safely (handles rejections)
