@@ -46,7 +46,7 @@ async function bootstrap(): Promise<void> {
 
   // Start the application
   const port = process.env.PORT ? Number(process.env.PORT) : 3000;
-  await app.listen(3000, '0.0.0.0');
+  await app.listen(4000, '0.0.0.0');
 
   // Log success message
   console.log(`Server running at http://localhost:${port}/api`);
