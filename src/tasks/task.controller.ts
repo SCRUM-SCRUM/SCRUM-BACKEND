@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Post, Param, Body, Put, Delete, Get } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateSubtaskDto } from '../subtask/dto/create-subtask.dto';
@@ -23,7 +24,7 @@ export class TaskController {
   }
 
   @Get(':taskId/subtasks')
-  getSubtasks(@Param('taskId') taskId: number) {
+  getSubtasks(@Param('taskId') taskId: string) {
     return this.subtaskService.findAllForTask(taskId);
   }
 

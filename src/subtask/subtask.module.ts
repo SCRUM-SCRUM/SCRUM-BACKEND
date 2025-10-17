@@ -1,13 +1,14 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Subtask } from './entities/subtask.entity';
-import { Task } from '../tasks/entities/task.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Subtask, SubtaskSchema } from './schemas/subtask.schema';
+import { Task, TaskSchema } from '../tasks/task.schema'; 
 import { SubtaskService } from './subtask.service';
 import { SubtaskController } from './subtask.controller';
 import { SubtaskGateway } from './subtask.gateway';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Subtask, Task])],
+  imports: [MongooseModule.forFeature([{ name: Subtask.name, schema: SubtaskSchema }, { name: Task.name, schema: TaskSchema }])],
   controllers: [SubtaskController],
   providers: [SubtaskService, SubtaskGateway],
   exports: [SubtaskService],

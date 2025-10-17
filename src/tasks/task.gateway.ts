@@ -1,6 +1,7 @@
+/* eslint-disable prettier/prettier */
 // src/tasks/task.gateway.ts
-import {SubscribeMessage, WebSocketGateway, WebSocketServer} from '@nestjs/websockets';
-import {MessageBody} from '@nestjs/websockets';
+import {WebSocketGateway, WebSocketServer} from '@nestjs/websockets';
+// import {MessageBody} from '@nestjs/websockets';
 import { Server } from 'socket.io';
 
 @WebSocketGateway({ cors: true })

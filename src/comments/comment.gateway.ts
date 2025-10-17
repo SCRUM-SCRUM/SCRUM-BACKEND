@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -18,30 +19,57 @@ export class CommentGateway {
 
   constructor(private readonly commentService: CommentService) {}
 
+  // ✅ Add comment
   @SubscribeMessage('addComment')
-  async handleAddComment(@MessageBody() payload: { taskId: string; content: string; userId: string }) {
-    const comment = await this.commentService.addComment(payload.taskId, payload.content, payload.userId);
+  async handleAddComment(
+    @MessageBody() payload: { taskId: string; userId: string; content: string },
+  ) {
+    const comment = await this.commentService.addComment(
+      payload.taskId,
+      payload.userId,
+      payload.content,
+    );
+
+    // Broadcast new comment to task room
     this.server.emit(`task:${payload.taskId}:commentAdded`, comment);
     return comment;
   }
 
-   @SubscribeMessage('editComment')
+  // ✅ Edit comment
+  @SubscribeMessage('editComment')
   async handleEditComment(
-    @MessageBody() payload: { commentId: string; content: string },
+    @MessageBody() payload: { commentId: string; userId: string; content: string },
   ) {
-    const comment = await this.commentService.editComment(payload.commentId, payload.content);
-    this.server.emit(`task:${comment.task.id}:commentUpdated`, comment);
-    return comment;
+    const updatedComment = await this.commentService.editComment(
+      payload.commentId,
+      payload.userId,
+      payload.content,
+    );
+
+    // Use taskId since there's no 'task' field in schema
+    if (updatedComment.taskId) {
+      this.server.emit(
+        `task:${updatedComment.taskId.toString()}:commentUpdated`,
+        updatedComment,
+      );
+    }
+
+    return updatedComment;
   }
 
+  // ✅ Delete comment
   @SubscribeMessage('deleteComment')
   async handleDeleteComment(
-    @MessageBody() payload: { commentId: string },
+    @MessageBody() payload: { commentId: string; taskId: string },
   ) {
-    const deleted = await this.commentService.deleteComment(payload.commentId);
-    if (deleted.taskId) {
-      this.server.emit(`task:${deleted.taskId}:commentDeleted`, { commentId: payload.commentId });
+    await this.commentService.deleteComment(payload.commentId, payload.taskId);
+
+    if (payload.taskId) {
+      this.server.emit(`task:${payload.taskId}:commentDeleted`, {
+        commentId: payload.commentId,
+      });
     }
-    return deleted;
+
+    return { message: 'Comment deleted successfully' };
   }
 }

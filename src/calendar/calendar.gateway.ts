@@ -1,6 +1,6 @@
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
-import { CalendarTask } from '../entities/calendartask.entity';
+import { CalendarTask } from '../schemas/calendartask.schema';
 
 @WebSocketGateway({ namespace: '/calendar' })
 export class TaskGateway {

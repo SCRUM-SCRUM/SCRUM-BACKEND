@@ -1,51 +1,76 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
-import { CalendarTask } from '../entities/calendartask.entity';
+/* eslint-disable prettier/prettier */
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { CalendarTask } from '../schemas/calendartask.schema';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Injectable()
 export class CalendarService {
   constructor(
-    @InjectRepository(CalendarTask)
-    private taskRepo: Repository<CalendarTask>
+    @InjectModel(CalendarTask.name)
+    private readonly taskModel: Model<CalendarTask>,
   ) {}
 
-  async getTasksInRange(viewMode: string, from: string, to: string) {
-  const fromDate = new Date(from);
-  const toDate = new Date(to);
+  async getTasksInRange(viewMode: string, from: string, to: string): Promise<CalendarTask[]> {
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
 
-  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
-    throw new Error('Invalid date range');
+    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+      throw new BadRequestException('Invalid date range');
+    }
+
+    const tasks = await this.taskModel
+      .find({
+        startDate: { $gte: fromDate },
+        dueDate: { $lte: toDate },
+      })
+      .populate('calendarUser', 'id name')
+      .sort({ startDate: 1 })
+      .exec();
+
+    return tasks;
   }
 
-  const tasks: CalendarTask[] = await this.taskRepo.createQueryBuilder('calendarTask')
-    .where('calendarTask.startDate >= :fromDate', { fromDate })
-    .andWhere('calendarTask.dueDate <= :toDate', { toDate })
-    // .andWhere('calendarTask.status = :status', { status: 'In Progress' }) 
-    .leftJoinAndSelect('calendarTask.calendarUser', 'user').select(['user.id', 'user.name'])
-    .getMany();
+  async createTask(dto: CreateTaskDto): Promise<CalendarTask> {
+    try {
+      const task = new this.taskModel({
+        ...dto,
+        status: 'To Do',
+      });
+      return await task.save();
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new BadRequestException(`Failed to create task: ${error.message}`);
+      }
+      throw new BadRequestException('Failed to create task');
+    }
+  }
 
-    tasks.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-  return tasks;
+  async updateTask(id: string, dto: UpdateTaskDto): Promise<CalendarTask> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid task ID');
+    }
+
+    const updated = await this.taskModel
+      .findByIdAndUpdate(id, dto, { new: true })
+      .exec();
+    
+    if (!updated) {
+      throw new NotFoundException('Task not found');
+    }
+    return updated;
+  }
+
+  async deleteTask(id: string): Promise<void> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid task ID');
+    }
+
+    const result = await this.taskModel.findByIdAndDelete(id).exec();
+    if (!result) {
+      throw new NotFoundException('Task not found');
+    }
+  }
 }
-
-  async createTask(dto: CreateTaskDto) {
-    const task = this.taskRepo.create({
-      ...dto,
-      status: 'To Do',
-    });
-    return this.taskRepo.save(task);
-  }
-
-  async updateTask(id: string, dto: UpdateTaskDto) {
-    await this.taskRepo.update(id, dto);
-    return this.taskRepo.findOne({ where: { id } });
-  }
-
-  async deleteTask(id: string) {
-    await this.taskRepo.delete(id);
-  }
-}
-

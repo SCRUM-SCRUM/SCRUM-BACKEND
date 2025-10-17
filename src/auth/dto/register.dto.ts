@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { IsString, IsEmail, IsStrongPassword } from 'class-validator';
 
 export class RegisterDto {

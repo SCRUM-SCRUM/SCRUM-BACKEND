@@ -1,17 +1,25 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Workspace } from './entities/workspace.entity';
-import { WorkspaceController } from './workspace.controller';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Workspace, WorkspaceSchema } from './workspace.schema';
 import { WorkspaceService } from './workspace.service';
-import { ColumnEntity } from '../columns/entities/column.entity';
-import { Task } from '../tasks/entities/task.entity';
+import { WorkspaceController } from './workspace.controller';
+import { Column, ColumnSchema } from '../columns/schemas/column.schema';
+import { Task, TaskSchema } from '../tasks/schemas/task.schema';
 import { WorkspaceGateway } from './workspace.gateway';
+import { WorkspaceTask, WorkspaceTaskSchema } from './schemas/workspacetask.schema';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Workspace, ColumnEntity, Task])],
+  imports: [
+    MongooseModule.forFeature([
+      { name: Workspace.name, schema: WorkspaceSchema },
+      { name: Column.name, schema: ColumnSchema },
+      { name: Task.name, schema: TaskSchema },
+      { name: WorkspaceTask.name, schema: WorkspaceTaskSchema },
+    ]),
+  ],
   controllers: [WorkspaceController],
   providers: [WorkspaceService, WorkspaceGateway],
   exports: [WorkspaceService],
 })
 export class WorkspaceModule {}
-

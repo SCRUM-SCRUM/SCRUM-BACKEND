@@ -1,16 +1,16 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Comment } from './comment.entity';
-import { Task } from '../tasks/entities/task.entity';
-import { User } from '../users/user.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Comment, CommentSchema } from './comment.schema';
 import { CommentService } from './comment.service';
 import { CommentController } from './comment.controller';
-import { CommentGateway } from './comment.gateway';
+import { Task, TaskSchema } from '../tasks/schemas/task.schema';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Comment, Task, User])],
-  providers: [CommentService, CommentGateway],
+  imports: [MongooseModule.forFeature([{ name: Comment.name, schema: CommentSchema },
+    { name: Task.name, schema: TaskSchema },])],
   controllers: [CommentController],
-  exports: [CommentService, CommentGateway],
+  providers: [CommentService],
+  exports: [CommentService],
 })
 export class CommentModule {}

@@ -1,8 +1,9 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class MailService {
-  async sendVerificationEmail(to: string, token: string) {
+  sendVerificationEmail(to: string, token: string) {
     const verifyUrl = `http://localhost:3000/api/auth/verify?token=${token}`;
     
     // Instead of sending email, just log the token
@@ -10,3 +11,4 @@ export class MailService {
     console.log(`🔗 Verification link: ${verifyUrl}\n`);
   }
 }
+

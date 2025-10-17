@@ -1,16 +1,17 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan } from 'typeorm';
-import { Notification } from './entities/notification.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Notification, NotificationDocument } from './schemas/notification.schema';
 
 @Injectable()
 export class NotificationCleanup {
   private readonly logger = new Logger(NotificationCleanup.name);
 
   constructor(
-    @InjectRepository(Notification)
-    private readonly notificationRepo: Repository<Notification>,
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<NotificationDocument>,
   ) {}
 
   // Runs daily at midnight
@@ -19,10 +20,10 @@ export class NotificationCleanup {
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
-    const result = await this.notificationRepo.delete({
-      deletedAt: LessThan(threeDaysAgo),
+    const result = await this.notificationModel.deleteMany({
+      deletedAt: { $lt: threeDaysAgo },
     });
 
-    this.logger.log(`Deleted ${result.affected} notifications older than 3 days`);
+    this.logger.log(`🧹 Deleted ${result.deletedCount} notifications older than 3 days`);
   }
 }

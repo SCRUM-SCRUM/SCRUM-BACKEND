@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CommitmentsService } from './commitments.service';
@@ -16,7 +17,7 @@ export class CommitmentsCron {
       const res = await this.svc.archiveOldCompleted();
       this.logger.log(`Archived ${res.archived} commitments`);
     } catch (err) {
-      this.logger.error('Error in archive cron', err as any);
+      this.logger.error('Error in archive cron', err);
     }
   }
 }

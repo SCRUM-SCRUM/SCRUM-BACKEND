@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Post, Get, Param, Body,Put, Delete } from '@nestjs/common';
 import { CommentService } from './comment.service';
 
@@ -19,7 +20,8 @@ export class CommentController {
     @Param('commentId') commentId: string,
     @Body() body: { content: string },
   ) {
-    return this.commentService.editComment(commentId, body.content);
+    
+    return this.commentService.editComment(commentId, body.content, taskId);
   }
 
    @Delete(':commentId')
@@ -27,7 +29,7 @@ export class CommentController {
     @Param('taskId') taskId: string,
     @Param('commentId') commentId: string,
   ) {
-    return this.commentService.deleteComment(commentId);
+    return this.commentService.deleteComment(commentId, taskId);
   }
 
   @Get()

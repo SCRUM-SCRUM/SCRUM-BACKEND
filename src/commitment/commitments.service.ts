@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { Repository, Between, LessThanOrEqual, Not } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Commitment, CommitmentStatus } from './commitments.entity';
+/* eslint-disable prettier/prettier */
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Commitment, CommitmentStatus } from './commitments.schema';
 import { CreateCommitmentDto } from './dto/create-commitment.dto';
 import { UpdateCommitmentDto } from './dto/update-commitment.dto';
 import { CommitmentsGateway } from './commitments.gateway';
@@ -9,142 +10,152 @@ import { CommitmentsGateway } from './commitments.gateway';
 @Injectable()
 export class CommitmentsService {
   constructor(
-    @InjectRepository(Commitment)
-    private readonly repo: Repository<Commitment>,
+    @InjectModel(Commitment.name)
+    private readonly commitmentModel: Model<Commitment>,
     private readonly gateway: CommitmentsGateway,
   ) {}
 
-
-  // Removed duplicate archiveOldCompleted method
-
+  // ✅ Create
   async create(dto: CreateCommitmentDto): Promise<Commitment> {
-  const commitment = this.repo.create({
-    title: dto.title,
-    dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
-    assigneeId: dto.assigneeId !== undefined ? dto.assigneeId : undefined,
-    linkedTaskId: dto.linkedTaskId !== undefined ? dto.linkedTaskId : undefined,
-    priority: dto.priority ?? 'Medium',
-    status: dto.status ?? CommitmentStatus.NOT_STARTED,
-    archived: false,
+    const commitment = new this.commitmentModel({
+      title: dto.title,
+      description: dto.description ?? null,
+      dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
+      assigneeId: dto.assigneeId ?? null,
+      linkedTaskId: dto.linkedTaskId ?? null,
+      priority: dto.priority ?? 'Medium',
+      status: dto.status ?? CommitmentStatus.NOT_STARTED,
+      archived: false,
+      completed: false,
+    });
 
+    const saved = await commitment.save();
+    this.gateway.broadcast('commitment.created', saved);
+    return saved;
+  }
 
-  });
-
-  const saved = await this.repo.save(commitment);
-  await this.gateway.broadcast('commitment.created', saved);
-  return saved;
-}
-
-  async findOne(id: string) {
-    const item = await this.repo.findOne({ where: { id } });
+  // ✅ Find One
+  async findOne(id: string): Promise<Commitment> {
+    const item = await this.commitmentModel.findById(id).exec();
     if (!item) throw new NotFoundException('Commitment not found');
     return item;
   }
-    async list(params: {
+
+  // ✅ List / Filter
+  async list(params: {
     tab?: 'All' | 'Upcoming' | 'Due Today' | 'Completed' | 'Archived';
     assigneeId?: string;
     q?: string;
     priority?: string;
     sort?: 'dueDate' | 'assignee' | 'updatedAt';
   } = {}) {
-    const qb = this.repo.createQueryBuilder('c');
+    const filter: Record<string, any> = {};
+    const now = new Date();
 
     // Text search
-    if (params.q) qb.andWhere('c.title ILIKE :q', { q: `%${params.q}%` });
+    if (params.q) filter.title = { $regex: params.q, $options: 'i' };
 
     // Assignee
-    if (params.assigneeId) qb.andWhere('c.assigneeId = :assigneeId', { assigneeId: params.assigneeId });
+    if (params.assigneeId) filter.assigneeId = params.assigneeId;
 
     // Priority
-    if (params.priority) qb.andWhere('c.priority = :priority', { priority: params.priority });
+    if (params.priority) filter.priority = params.priority;
 
-    // Tabs logic
-    const now = new Date();
-    if (!params.tab || params.tab === 'All') {
-      // All: show everything (optionally exclude archived if you prefer); we'll show archived only when tab=Archived
-    } else if (params.tab === 'Upcoming') {
-      // Future due dates (strictly greater than now) and not archived
-      qb.andWhere('c.dueDate > :now', { now }).andWhere('c.archived = false');
-    } else if (params.tab === 'Due Today') {
-      const start = new Date(now);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(now);
-      end.setHours(23, 59, 59, 999);
-      qb.andWhere('c.dueDate BETWEEN :start AND :end', { start, end }).andWhere('c.archived = false');
-    } else if (params.tab === 'Completed') {
-      qb.andWhere('c.status = :status', { status: CommitmentStatus.COMPLETED }).andWhere('c.archived = false');
-    } else if (params.tab === 'Archived') {
-      qb.andWhere('c.archived = true');
+    // Tabs
+    if (params.tab && params.tab !== 'All') {
+      if (params.tab === 'Upcoming') {
+        filter.dueDate = { $gt: now };
+        filter.archived = false;
+      } else if (params.tab === 'Due Today') {
+        const start = new Date(now);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(now);
+        end.setHours(23, 59, 59, 999);
+        filter.dueDate = { $gte: start, $lte: end };
+        filter.archived = false;
+      } else if (params.tab === 'Completed') {
+        filter.status = CommitmentStatus.COMPLETED;
+        filter.archived = false;
+      } else if (params.tab === 'Archived') {
+        filter.archived = true;
+      }
     }
 
     // Sorting
-    if (params.sort === 'dueDate') qb.orderBy('c.dueDate', 'ASC');
-    else if (params.sort === 'assignee') qb.orderBy('c.assigneeId', 'ASC');
-    else qb.orderBy('c.updatedAt', 'DESC');
+    const sort: Record<string, 1 | -1> = {};
+    if (params.sort === 'dueDate') sort.dueDate = 1;
+    else if (params.sort === 'assignee') sort.assigneeId = 1;
+    else sort.updatedAt = -1;
 
-    return qb.getMany();
+    return this.commitmentModel.find(filter).sort(sort).exec();
   }
 
-  async update(id: string, dto: UpdateCommitmentDto) {
+  // ✅ Update
+  async update(id: string, dto: UpdateCommitmentDto): Promise<Commitment> {
     const item = await this.findOne(id);
+
     if (dto.title !== undefined) item.title = dto.title;
+    if (dto.description !== undefined) item.description = dto.description;
     if (dto.dueDate !== undefined) item.dueDate = new Date(dto.dueDate);
     if (dto.assigneeId !== undefined) item.assigneeId = dto.assigneeId ?? null;
     if (dto.linkedTaskId !== undefined) item.linkedTaskId = dto.linkedTaskId ?? null;
     if (dto.priority !== undefined) item.priority = dto.priority;
     if (dto.status !== undefined) item.status = dto.status;
     if (item.status === CommitmentStatus.COMPLETED) item.completed = true;
-     if (dto.archived !== undefined) item.archived = dto.archived;
-    const saved = await this.repo.save(item);
+    if (dto.archived !== undefined) item.archived = dto.archived;
+
+    const saved = await item.save();
     this.gateway.broadcast('commitment.updated', saved);
     return saved;
   }
 
-  async markComplete(id: string) {
+  // ✅ Mark Complete
+  async markComplete(id: string): Promise<Commitment> {
     const item = await this.findOne(id);
     if (item.status === CommitmentStatus.COMPLETED) return item;
+
     item.status = CommitmentStatus.COMPLETED;
-    const saved = await this.repo.save(item);
+    item.completed = true;
+
+    const saved = await item.save();
     this.gateway.broadcast('commitment.completed', saved);
     return saved;
   }
 
-  async archive(id: string) {
+  // ✅ Archive
+  async archive(id: string): Promise<Commitment> {
     const item = await this.findOne(id);
     if (!item.archived) {
       item.archived = true;
-      const saved = await this.repo.save(item);
+      const saved = await item.save();
       this.gateway.broadcast('commitment.archived', saved);
       return saved;
     }
     return item;
   }
 
-
+  // ✅ Delete
   async remove(id: string) {
     const item = await this.findOne(id);
-    await this.repo.remove(item);
+    await this.commitmentModel.deleteOne({ _id: item._id }).exec();
     this.gateway.broadcast('commitment.deleted', { id });
     return { success: true };
   }
 
+  // ✅ Archive Old Completed (24 hrs)
   async archiveOldCompleted() {
     const boundary = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const old = await this.repo.find({
-      where: {
-        status: CommitmentStatus.COMPLETED,
-        updatedAt: LessThanOrEqual(boundary) as any,
-      } as any,
+    const old = await this.commitmentModel.find({
+      status: CommitmentStatus.COMPLETED,
+      updatedAt: { $lte: boundary },
     });
 
     for (const it of old) {
       it.archived = true;
-      await this.repo.save(it);
+      await it.save();
       this.gateway.broadcast('commitment.archived', it);
     }
 
     return { archived: old.length };
   }
-
-
 }

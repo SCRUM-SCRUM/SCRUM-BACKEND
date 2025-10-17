@@ -1,47 +1,90 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Team } from './entities/team.entity';
-import { Member } from '../teammember/entities/member.entity';
+/* eslint-disable prettier/prettier */
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Team } from './schemas/team.schema';
+import { Member } from '../teammember/entities/member.schema';
 
 @Injectable()
 export class TeamsService {
   constructor(
-    @InjectRepository(Team) private readonly teamRepo: Repository<Team>,
-    @InjectRepository(Member) private readonly memberRepo: Repository<Member>,
+    @InjectModel(Team.name) private readonly teamModel: Model<Team>,
+    @InjectModel(Member.name) private readonly memberModel: Model<Member>,
   ) {}
 
+  // Create a new team
   async createTeam(name: string): Promise<Team> {
-    const team = this.teamRepo.create({ name });
-    return this.teamRepo.save(team);
+    const team = new this.teamModel({ name });
+    return await team.save();
   }
 
+  // Get all teams with members populated
   async getTeams(): Promise<Team[]> {
-    return this.teamRepo.find({ relations: ['members'] });
+    return await this.teamModel.find().populate('members').exec();
   }
 
-  async createMember(name: string, role: string, team: Team): Promise<Member> {
-  const member = this.memberRepo.create({ name, role, team });
+  // Create a new member and link to a team (accepts team id or team doc)
+  async createMember(name: string, role: string, teamIdOrDoc: string | Team): Promise<Member> {
+    // Resolve team id
+    const teamId = typeof teamIdOrDoc === 'string' ? new Types.ObjectId(teamIdOrDoc) : teamIdOrDoc._id;
 
-  // Safely increment member count
-  team.memberCount = (team.memberCount || 0) + 1;
-  await this.teamRepo.save(team);
+    // Ensure team exists
+    const team = await this.teamModel.findById(teamId).exec();
+    if (!team) throw new NotFoundException('Team not found');
 
-  return this.memberRepo.save(member);
-}
+    // Create member
+    const member = new this.memberModel({ name, role, team: team._id });
+    await member.save();
 
-async updateTeam(id: string, name: string): Promise<Team> {
-  const team = await this.teamRepo.findOne({ where: { id }, relations: ['members'] });
-  if (!team) throw new Error('Team not found');
-  team.name = name;
-  return this.teamRepo.save(team);
-}
+    // Atomically update team: increment count and push member id
+    await this.teamModel.findByIdAndUpdate(
+      team._id,
+      { $inc: { memberCount: 1 }, $push: { members: member._id } },
+      { new: true },
+    ).exec();
 
-async updateMember(id: string, name: string, role: string): Promise<Member> {
-  const member = await this.memberRepo.findOne({ where: { id }, relations: ['team'] });
-  if (!member) throw new Error('Member not found');
-  member.name = name;
-  member.role = role;
-  return this.memberRepo.save(member);
-}
+    return member;
+  }
+
+  // Update team name
+  async updateTeam(id: string, name: string): Promise<Team> {
+    const updated = await this.teamModel.findByIdAndUpdate(
+      id,
+      { name },
+      { new: true },
+    ).populate('members').exec();
+
+    if (!updated) throw new NotFoundException('Team not found');
+    return updated;
+  }
+
+  // Update member details
+  async updateMember(id: string, name: string, role: string): Promise<Member> {
+    const updated = await this.memberModel.findByIdAndUpdate(
+      id,
+      { name, role },
+      { new: true },
+    ).populate('team').exec();
+
+    if (!updated) throw new NotFoundException('Member not found');
+    return updated;
+  }
+
+  // Optional: remove member (decrement count and remove from members array)
+  async removeMember(id: string): Promise<{ success: boolean }> {
+    const member = await this.memberModel.findById(id).exec();
+    if (!member) throw new NotFoundException('Member not found');
+
+    // Remove member doc
+    await this.memberModel.deleteOne({ _id: member._id }).exec();
+
+    // Decrement memberCount and pull from members
+    await this.teamModel.findByIdAndUpdate(
+      member.team,
+      { $inc: { memberCount: -1 }, $pull: { members: member._id } },
+      { new: true },
+    ).exec();
+
+    return { success: true };
+  }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -9,16 +10,22 @@ import { Server, Socket } from 'socket.io';
 import * as jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 
+interface JwtPayload {
+  userId: string;
+  iat?: number;
+  exp?: number;
+}
+
 @WebSocketGateway({ cors: true })
 export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  private logger: Logger = new Logger('EventsGateway');
+  public logger: Logger = new Logger('EventsGateway');
 
   constructor(private readonly configService: ConfigService) {}
 
-  handleConnection(client: Socket) {
+  async handleConnection(client: Socket) {
     const authHeader = client.handshake.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -30,15 +37,16 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const token = authHeader.split(' ')[1];
 
     try {
+
       const decoded = this.verifyJwt(token);
       const userId = decoded.userId;
 
       if (!userId) throw new Error('Invalid token payload');
-
-      client.join(`notifications:${userId}`);
+      await client.join(`notifications:${userId}`);
       this.logger.log(`Client ${client.id} joined notifications:${userId}`);
-    } catch (err) {
-      this.logger.warn(`JWT verification failed for client ${client.id}`);
+    } catch (err:any) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      this.logger.warn(`JWT verification failed for client ${client.id}: ${err?.message}`);
       client.disconnect();
     }
   }
@@ -47,25 +55,25 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log(`Client ${client.id} disconnected`);
   }
 
-  emitToUser(userId: number, notification: any) {
+  emitToUser(userId: string, notification: any) {
     this.server.to(`notifications:${userId}`).emit('newNotification', notification);
   }
 
-  sendTaskCreateToUser(userId: number, task: any) {
+  sendTaskCreateToUser(userId: string, task: any) {
     this.server.to(`notifications:${userId}`).emit('taskCreated', task);
   }
 
-  sendTaskUpdateToUser(userId: number, task: any) {
+  sendTaskUpdateToUser(userId: string, task: any) {
     this.server.to(`notifications:${userId}`).emit('taskUpdated', task);
   }
 
-  private verifyJwt(token: string): any {
+  private verifyJwt(token: string): JwtPayload {
     const secret = this.configService.get<string>('JWT_SECRET');
 
     if (!secret) {
       throw new Error('JWT_SECRET not defined in environment');
     }
 
-    return jwt.verify(token, secret);
+    return jwt.verify(token, secret) as JwtPayload;
   }
 }

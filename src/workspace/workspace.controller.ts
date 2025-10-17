@@ -1,25 +1,34 @@
-import { Controller, Post, Get, Param, Body } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
 import { WorkspaceService } from './workspace.service';
-import { Workspace } from './entities/workspace.entity';
+import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 
 @Controller('workspaces')
 export class WorkspaceController {
   constructor(private readonly workspaceService: WorkspaceService) {}
 
   @Post()
-  create(@Body('name') name: string): Promise<Workspace> {
-    return this.workspaceService.create(name);
+  async create(@Body() data: CreateWorkspaceDto) {
+    return await this.workspaceService.create(data);
+  }
+
+  @Get()
+  async findAll() {
+    return await this.workspaceService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<Workspace> {
-    return this.workspaceService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    return await this.workspaceService.findById(id);
   }
 
-  // Fetch all columns and tasks for a workspace in ordered layout
-  @Get(':id/board')
-  async getBoard(@Param('id') id: number) {
-    return this.workspaceService.getBoardLayout(id);
+  @Put(':id/members/:userId')
+  async addMember(@Param('id') workspaceId: string, @Param('userId') userId: string) {
+    return await this.workspaceService.addMember(workspaceId, userId);
+  }
+
+  @Delete(':id')
+  async remove(@Param('id') id: string) {
+    return await this.workspaceService.delete(id);
   }
 }
- 

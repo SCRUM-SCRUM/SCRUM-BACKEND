@@ -1,36 +1,34 @@
+/* eslint-disable prettier/prettier */
 import {
   WebSocketGateway,
   WebSocketServer,
-  OnGatewayInit,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
+  SubscribeMessage,
+  MessageBody,
+  ConnectedSocket,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
-import { Injectable, Logger } from '@nestjs/common';
+import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway({ cors: { origin: true }, namespace: '/commitments' })
-@Injectable()
-export class CommitmentsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-  private readonly logger = new Logger(CommitmentsGateway.name);
-
+@WebSocketGateway({ cors: true })
+export class CommitmentsGateway {
   @WebSocketServer()
   server: Server;
 
-  afterInit() {
-    this.logger.log('Commitments WebSocket gateway initialized');
+  // ✅ Typed client socket
+  handleConnection(client: Socket) {
+    console.log(`Client connected: ${client.id}`);
   }
 
-  handleConnection(client: any) {
-    this.logger.log(`Client connected: ${client.id}`);
+  handleDisconnect(client: Socket) {
+    console.log(`Client disconnected: ${client.id}`);
   }
 
-  handleDisconnect(client: any) {
-    this.logger.log(`Client disconnected: ${client.id}`);
+  @SubscribeMessage('joinRoom')
+  async handleJoin(@ConnectedSocket() client: Socket, @MessageBody() data: { roomId: string }) {
+    await client.join(data.roomId);
+    this.server.to(data.roomId).emit('joined', { clientId: client.id });
   }
 
-  // Convenience method used by service/controller to broadcast
-  broadcast(event: string, payload: any) {
-    // Emit to all clients connected to this namespace
+  broadcast(event: string, payload: unknown): void {
     this.server.emit(event, payload);
   }
 }

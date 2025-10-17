@@ -1,5 +1,6 @@
+/* eslint-disable prettier/prettier */
 import { IsNotEmpty, IsOptional, IsEnum, IsISO8601, IsUUID,  } from 'class-validator';
-import { CommitmentStatus } from '../commitments.entity';
+import { CommitmentStatus } from '../commitments.schema';
 
 export class CreateCommitmentDto {
  @IsNotEmpty({ message: 'Title is required' })
@@ -11,6 +12,10 @@ export class CreateCommitmentDto {
   @IsOptional()
   @IsUUID()
   assigneeId?: string;
+
+   @IsOptional()
+  @IsUUID()
+  description?: string;
 
   @IsOptional()
   linkedTaskId?: string;

@@ -1,7 +1,8 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
 import { TeamsService } from './teams.service';
-import { Team } from './entities/team.entity';
-import { Member } from '../teammember/entities/member.entity';
+import { Team } from './schemas/team.schema';
+import { Member } from '../teammember/entities/member.schema';
 
 @Controller('teams')
 export class TeamsController {

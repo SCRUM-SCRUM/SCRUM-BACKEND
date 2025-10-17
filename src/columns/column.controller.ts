@@ -1,13 +1,17 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Post, Body, Param } from '@nestjs/common';
 import { ColumnService } from './column.service';
-import { ColumnEntity } from './entities/column.entity';
+import { Column } from './schemas/column.schema';
 
 @Controller('columns')
 export class ColumnController {
   constructor(private readonly columnService: ColumnService) {}
 
   @Post(':workspaceId')
-  create(@Param('workspaceId') workspaceId: number, @Body('name') name: string): Promise<ColumnEntity> {
-    return this.columnService.create(workspaceId, name);
+  async create(
+    @Param('workspaceId') workspaceId: string,
+    @Body('name') name: string,
+  ): Promise<Column> {
+    return this.columnService.create(workspaceId, name); // Remove the + operator
   }
 }

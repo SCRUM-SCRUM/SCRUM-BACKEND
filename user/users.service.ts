@@ -1,25 +1,32 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './user.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User, UserDocument } from './user.schema';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
-  async create(createUserDto: any) {
-    const user = this.usersRepository.create(createUserDto);
-    return this.usersRepository.save(user);
+  // create user
+  async create(createUserDto: CreateUserDto): Promise<UserDocument> {
+    const newUser = new this.userModel(createUserDto);
+    const saved = await newUser.save();
+    // go through unknown first to avoid TS "may be a mistake" cast complaint
+    return saved as unknown as UserDocument;
   }
 
-  async findAll() {
-    return this.usersRepository.find();
+  // find all users
+  async findAll(): Promise<UserDocument[]> {
+    const users = await this.userModel.find().exec();
+    return users as unknown as UserDocument[];
   }
 
-  async remove(id: number) {
-    await this.usersRepository.delete(id);
+  // remove user by id
+  async remove(id: string): Promise<void> {
+    await this.userModel.findByIdAndDelete(id).exec();
   }
 }

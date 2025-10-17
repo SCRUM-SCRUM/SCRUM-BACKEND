@@ -1,14 +1,21 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ColumnEntity } from './entities/column.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Column, ColumnSchema } from './schemas/column.schema';
 import { ColumnService } from './column.service';
 import { ColumnController } from './column.controller';
-import { Workspace } from '../workspace/entities/workspace.entity';
-import { WorkspaceSubtask } from 'src/workspace/entities/WorkspaceSubtask.entity';
 import { ColumnGateway } from './column.gateway';
+import { Workspace, WorkspaceSchema } from '../workspace/workspace.schema';
+import { Task, TaskSchema } from '../tasks/task.schema';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ColumnEntity, Workspace, WorkspaceSubtask])],
+  imports: [
+    MongooseModule.forFeature([
+      { name: Column.name, schema: ColumnSchema },
+      { name: Workspace.name, schema: WorkspaceSchema },
+      { name: Task.name, schema: TaskSchema },
+    ]),
+  ],
   controllers: [ColumnController],
   providers: [ColumnService, ColumnGateway],
   exports: [ColumnService],

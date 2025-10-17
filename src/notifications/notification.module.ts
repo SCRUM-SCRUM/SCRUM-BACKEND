@@ -1,17 +1,20 @@
+/* eslint-disable prettier/prettier */
 import { Module, forwardRef } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Notification } from './entities/notification.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Notification, NotificationSchema } from './schemas/notification.schema';
 import { NotificationService } from './notification.service';
 import { NotificationController } from './notification.controller';
 import { NotificationCleanup } from './notification.cleanup';
 import { TaskModule } from '../tasks/task.module';
-import { User } from '../users/user.entity';
-import { Task } from '@/tasks/entities/task.entity';
+import { Task, TaskSchema } from '../tasks/schemas/task.schema';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Notification, User, Task]),
-    //forwardRef(() => TaskModule),
+    MongooseModule.forFeature([
+      { name: Notification.name, schema: NotificationSchema },
+      { name: Task.name, schema: TaskSchema },
+    ]),
+    forwardRef(() => TaskModule),
   ],
   controllers: [NotificationController],
   providers: [NotificationService, NotificationCleanup],

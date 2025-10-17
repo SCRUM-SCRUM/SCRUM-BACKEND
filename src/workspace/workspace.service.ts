@@ -1,64 +1,57 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Workspace } from './entities/workspace.entity';
-import { ColumnEntity } from '../columns/entities/column.entity';
-import { WorkspaceGateway } from './workspace.gateway';
+/* eslint-disable prettier/prettier */
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Workspace } from './workspace.schema';
+import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 
 @Injectable()
 export class WorkspaceService {
-  constructor(
-    @InjectRepository(Workspace)
-    private readonly workspaceRepo: Repository<Workspace>,
-    @InjectRepository(ColumnEntity)
-    private readonly columnRepo: Repository<ColumnEntity>,
-     private workspaceGateway: WorkspaceGateway,
-  ) {}
+  constructor(@InjectModel(Workspace.name) private workspaceModel: Model<Workspace>) {}
 
-  create(name: string): Promise<Workspace> {
-    const workspace = this.workspaceRepo.create({ name });
-    workspace.columns = [];
-    workspace.tasks = [];
-    this.workspaceGateway.broadcastWorkspaceupdate('workspace.created', workspace);
-    return this.workspaceRepo.save(workspace);
+  async create(dto: CreateWorkspaceDto): Promise<Workspace> {
+  const members = dto.members
+    ? dto.members
+        .filter(Boolean)
+        .map((m) => (Types.ObjectId.isValid(String(m)) ? new Types.ObjectId(String(m)) : undefined))
+        .filter((m): m is Types.ObjectId => !!m)
+    : [];
+
+  const payload: Partial<Workspace> = {
+    name: dto.name,
+    ...(dto.description ? { description: dto.description } : {}),
+    ...(members.length ? { members } : {}),
+  };
+
+  const created = new this.workspaceModel(payload);
+  return await created.save();
+}
+  
+  async findAll() {
+    return this.workspaceModel.find().populate('owner members').exec();
   }
 
-  // In workspace.service.ts
-async countActiveWorkspaces(): Promise<number> {
-  return this.workspaceRepo.count({ 
-    where: { /* your active workspace criteria */ } 
-  });
-}
-
-async countAllWorkspaces(): Promise<number> {
-  return this.workspaceRepo.count();
-}
-
-  async findOne(id: number): Promise<Workspace> {
-    const workspace = await this.workspaceRepo.findOne({ where: { id }, relations: ['columns', 'columns.tasks'] });
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
-    this.workspaceGateway.broadcastWorkspaceupdate('workspace.found', workspace);
-    return workspace;
+  async findById(id: string) {
+    return this.workspaceModel.findById(id).populate('owner members').exec();
   }
 
-  async getBoardLayout(id: number) {
-    const workspace = await this.workspaceRepo.findOne({
-      where: { id },
-      relations: ['columns', 'columns.tasks'],
-      order: {
-        columns: {
-          order: 'ASC',
-        },
-      },
-    });
+  async addMember(workspaceId: string, userId: string) {
+    return this.workspaceModel.findByIdAndUpdate(
+      workspaceId,
+      { $addToSet: { members: userId } },
+      { new: true },
+    );
+  }
 
-    if (!workspace) {
-      throw new NotFoundException('Workspace not found');
-    }
-    this.workspaceGateway.broadcastWorkspaceupdate('workspace.layout', workspace);
+  async delete(id: string) {
+    return this.workspaceModel.findByIdAndDelete(id);
+  }
 
-    return workspace;
+  async countActiveWorkspaces(): Promise<number> {
+    return this.workspaceModel.countDocuments({ isActive: true });
+  }
+
+  async countAllWorkspaces(): Promise<number> {
+    return this.workspaceModel.countDocuments();
   }
 }

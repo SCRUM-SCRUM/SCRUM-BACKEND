@@ -1,41 +1,17 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { Task } from './entities/task.entity';
-import { ColumnEntity } from '../columns/entities/column.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Task, TaskSchema } from './task.schema';
 import { TaskService } from './task.service';
 import { TaskController } from './task.controller';
-import { WorkspaceSubtask } from 'src/workspace/entities/WorkspaceSubtask.entity';
-import { TaskGateway } from './task.gateway';
-import { Comment } from '../comments/comment.entity';
-import { CommentService } from '../comments/comment.service';
-import { CommentController } from '../comments/comment.controller';
-import { CommentGateway } from '../comments/comment.gateway';
-import { CommentModule } from '../comments/comment.module';
 import { SubtaskModule } from '@/subtask/subtask.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      Task,
-      ColumnEntity,
-      WorkspaceSubtask,
-      Comment,
-    ]),
-    CommentModule,
-    SubtaskModule, // ✅ import instead of duplicating providers
-  ],
-  controllers: [TaskController, CommentController],
-  providers: [
-    TaskService,
-    TaskGateway,
-    CommentService,
-    CommentGateway,
-  ],
-  exports: [
-    TaskService,
-    CommentService,
-    CommentGateway,
-    TaskGateway,
-  ],
+  imports: [MongooseModule.forFeature([{ name: Task.name, schema: TaskSchema }]),
+  SubtaskModule,
+],
+  controllers: [TaskController],
+  providers: [TaskService],
+  exports: [TaskService],
 })
 export class TaskModule {}

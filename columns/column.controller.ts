@@ -1,13 +1,17 @@
-import{ Controller, Post, Param, Body } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import { Controller, Post, Param, Body } from '@nestjs/common';
 import { ColumnService } from './column.service';
-import { ColumnEntity } from './entities/column.entity';
+import { Column } from './schemas/column.schema'; 
 
 @Controller('columns')
 export class ColumnController {
   constructor(private readonly columnService: ColumnService) {}
 
   @Post(':workspaceId')
-  create(@Param('workspaceId') workspaceId: number, @Body('name') name: string): Promise<ColumnEntity> {
+  create(
+    @Param('workspaceId') workspaceId: string, 
+    @Body('name') name: string,
+  ): Promise<Column> { 
     return this.columnService.create(workspaceId, name);
   }
-} 
+}

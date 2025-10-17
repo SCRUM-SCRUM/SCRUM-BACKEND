@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 export class CreateTaskDto {
   title: string;
   assigneeId: string;

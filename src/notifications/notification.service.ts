@@ -1,84 +1,111 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Notification } from './entities/notification.entity';
-import { Repository, LessThan, In } from 'typeorm';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model} from 'mongoose';
+import { Notification, NotificationDocument } from './schemas/notification.schema';
 import { CreateNotificationDto } from './dto/create-notification.dto';
-import { User } from '../users/user.entity';
-import { Task } from '../tasks/entities/task.entity';
+import { Task } from '../tasks/task.schema';
+import { UserDocument } from '../users/user.schema';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class NotificationService {
   constructor(
-    @InjectRepository(Notification)
-    private readonly notificationRepo: Repository<Notification>,
-    @InjectRepository(Task)
-    private readonly taskRepo: Repository<Task>
+    @InjectModel(Notification.name)
+    private readonly notificationModel: Model<NotificationDocument>,
+    @InjectModel(Task.name)
+    private readonly taskModel: Model<Task>,
   ) {}
 
-  async create(user: User, dto: CreateNotificationDto) {
-    const notification = this.notificationRepo.create({
+  // CREATE NOTIFICATION
+  async create(user: UserDocument, dto: CreateNotificationDto): Promise<NotificationDocument> {
+    const notification = new this.notificationModel({
       ...dto,
-      recipient: { id: user.id } as User,
+      recipient: user._id,
     });
-    return this.notificationRepo.save(notification);
+    return await notification.save();
   }
 
+  // GET USER NOTIFICATIONS
   async findUserNotifications(userId: string, limit = 20, cursor?: Date) {
-    const notifications = await this.notificationRepo.find({
-        where: {
-            recipient: { id: Number(userId) },
-            ...(cursor && { createdAt: LessThan(cursor) }),
-        },
-        order: { createdAt: 'DESC' },
-        take: limit,
-    });
+    const query: Record<string, unknown> = { recipient: userId };
+    if (cursor) query['createdAt'] = { $lt: cursor };
+
+    const notifications = await this.notificationModel
+  .find(query)
+  .sort({ createdAt: -1 })
+  .limit(limit)
+  .lean()
+  .exec();
+
 
     const taskLinks = notifications
-        .filter(notif => notif.link?.startsWith('/tasks/'))
-        .map(notif => notif.link.split('/tasks/')[1]);
+      .filter((notif) => notif.link?.startsWith('/tasks/'))
+      .map((notif) => notif.link?.split('/tasks/')[1] || '');
 
-    const existingTasks = taskLinks.length > 0
-        ? await this.taskRepo.find({ 
-            where: { id: In(taskLinks.map(Number)) }, // Convert to numbers here as well
-            select: ['id'] 
-          })
-        : [];
+    const existingTasks = taskLinks.length
+      ? await this.taskModel.find(
+          { _id: { $in: taskLinks.filter(Boolean) } },
+          { _id: 1 },
+        ).lean().exec()
+      : [];
 
-    const validTaskIds = new Set(existingTasks.map(t => t.id));
-
-    return notifications.map(notif => ({
-        ...notif,
-        isValid: !notif.link?.startsWith('/tasks/') || 
-                 validTaskIds.has(Number(notif.link.split('/tasks/')[1])),
+    const validTaskIds = new Set(
+  existingTasks.map((t) => (t._id as Types.ObjectId).toString()),
+);
+    return notifications.map((notif) => ({
+      ...notif,
+      isValid:
+        !notif.link?.startsWith('/tasks/') ||
+        validTaskIds.has(notif.link?.split('/tasks/')[1] || ''),
     }));
-}
+  }
 
-  async unreadCount(userId: string) {
-    return this.notificationRepo.count({
-      where: { recipient: { id: Number(userId) }, isRead: false },
+  // UNREAD COUNT
+  async unreadCount(userId: string): Promise<number> {
+    return this.notificationModel.countDocuments({
+      recipient: userId,
+      isRead: false,
     });
   }
 
-  async markAllAsRead(userId: string) {
-    await this.notificationRepo.update(
-      { recipient: { id: Number(userId) }, isRead: false },
-      { isRead: true }
+  // MARK ALL AS READ
+  async markAllAsRead(userId: string): Promise<void> {
+    await this.notificationModel.updateMany(
+      { recipient: userId, isRead: false },
+      { $set: { isRead: true } },
     );
   }
 
-  async markOneAsRead(id: string) {
-    return this.notificationRepo.update(id, { isRead: true });
+  // MARK ONE AS READ
+  async markOneAsRead(id: string): Promise<NotificationDocument | null> {
+    return this.notificationModel.findByIdAndUpdate(
+      id,
+      { $set: { isRead: true } },
+      { new: true },
+    );
   }
 
-  async markOneAsUnread(id: string) {
-    return this.notificationRepo.update(id, { isRead: false });
+  // MARK ONE AS UNREAD
+  async markOneAsUnread(id: string): Promise<NotificationDocument | null> {
+    return this.notificationModel.findByIdAndUpdate(
+      id,
+      { $set: { isRead: false } },
+      { new: true },
+    );
   }
 
-  async delete(id: string) {
-    return this.notificationRepo.softDelete(id);
+  // DELETE (soft delete with isDeleted flag if needed)
+  async deleteNotification(id: string): Promise<NotificationDocument | null> {
+    return this.notificationModel.findByIdAndDelete(id);
   }
 
-  async restore(id: string) {
-    return this.notificationRepo.restore(id);
+  // RESTORE — only if you use soft delete
+  async restore(id: string): Promise<NotificationDocument | null> {
+    return this.notificationModel.findByIdAndUpdate(
+      id,
+      { $set: { isDeleted: false } },
+      { new: true },
+    );
   }
 }

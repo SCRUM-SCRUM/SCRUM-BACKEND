@@ -1,136 +1,151 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from '../users/user.entity';
-import * as bcrypt from 'bcrypt';
+/* eslint-disable prettier/prettier */
+import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import * as bcrypt from 'bcrypt';
+import { User, UserDocument } from '../users/user.schema';
 import { RegisterDto } from './dto/register.dto';
-import { MailService } from './mail/mail.service';
-import { isEmail } from 'class-validator';
+
+type JwtPayload = { sub: string; email?: string; purpose?: string };
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
-    private jwtService: JwtService,
-    private mailService: MailService
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
+    private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<any> {
+  /**
+   * Validate user credentials for the local strategy.
+   * Throws UnauthorizedException on invalid credentials.
+   */
+  async validateUser(email: string, password: string): Promise<UserDocument> {
     try {
-      const user = await this.usersRepository.findOne({ where: { email } });
-      console.log('Found user:', !!user);
+      const user = (await this.userModel.findOne({ email }).exec()) as UserDocument | null;
 
-      if (!user) return null;
-
-      const passwordMatch = await bcrypt.compare(pass, user.password);
-      console.log('Password match:', passwordMatch);
-
-      if (passwordMatch) {
-
-        if (!user.isEmailVerified) {
-          throw new BadRequestException('Please verify your email before logging in.');
-        }
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        };
+      if (!user) {
+        throw new UnauthorizedException('Invalid credentials');
       }
 
-      return null;
-    } catch (error) {
-      console.error('validateUser error:', error);
-      return null;
-    }
-  }
+      // bcrypt.compare returns Promise<boolean>
+       
+      const isPasswordValid = (await bcrypt.compare(
+  String(password),
+  String(user.password),
+));
 
-  async login(user: any) {
-    try {
-      console.log('Login user object:', user);
-
-      if (!user?.id || !user?.email) {
-        throw new Error('User is missing required properties');
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
       }
 
-      const payload = { sub: user.id, email: user.email, name: user.name };
-      const token = this.jwtService.sign(payload);
-
-      return {
-        access_token: token,
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name || 'Unknown',
-          isEmailVerified: user.isEmailVerified
-        },
-      };
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
+      return user;
+    } catch (error: unknown) {
+      console.error('password error', String(error));
+      // Narrow and rethrow as Unauthorized to avoid leaking internal errors
+      throw new UnauthorizedException('Invalid credentials String');
     }
   }
 
-  async register(regDetails: RegisterDto) {
-    try {
-      const hashedPassword = await bcrypt.hash(regDetails.password, 10);
-
-      const user = this.usersRepository.create({
-        name: regDetails.name,
-        email: regDetails.email,
-        password: hashedPassword,
-        isEmailVerified: false,
-      });
-
-      const savedUser = await this.usersRepository.save(user);
-
-      const token = this.jwtService.sign(
-        { sub: savedUser.id, 
-          email: savedUser.email,
-          purpose: 'email_verification'
-        }, 
-        { expiresIn: '1d' }
-      );
-
-      await this.mailService.sendVerificationEmail(savedUser.email, token);
-
-      return { message: 'User registered. Please verify your email.'};
-
-    } catch (error) {
-      console.error('Register error:', error);
-      throw error;
+  /**
+   * Login: sign a JWT and return token + minimal user info
+   */
+  async login(user: UserDocument) {
+    if (!user || !user._id) {
+      throw new UnauthorizedException('User not found');
     }
+
+    // ensure we use a string id (avoid base-to-string warning)
+    const sub = user._id instanceof Types.ObjectId ? user._id.toHexString() : String('[user._id ??]');
+
+    const payload: JwtPayload = { sub, email: user.email };
+    // use async variant - returns Promise<string>
+    const access_token: string = await this.jwtService.signAsync(payload);
+
+    return {
+      message: 'Login successful',
+      access_token,
+      user: {
+        id: sub,
+        email: user.email,
+        name: user.name,
+        isEmailVerified: !!user.isEmailVerified,
+      },
+    };
   }
 
+  /**
+   * Register a new user
+   */
+  async register(registerDto: RegisterDto) {
+    const { email, password, name } = registerDto;
+
+    const existingUser = (await this.userModel.findOne({ email }).exec()) as UserDocument | null;
+    
+    if (existingUser) {
+      throw new BadRequestException('Email already exists');
+    }
+
+     
+    const hashedPassword = (await bcrypt.hash(password, 10))
+
+    const newUser = new this.userModel({
+      name,
+      email,
+      password: hashedPassword,
+      isEmailVerified: false,
+    });
+
+    await newUser.save();
+
+    return { message: 'User registered successfully' };
+  }
+
+  /**
+   * Verify email using token (signed JWT)
+   */
   async verifyEmail(token: string) {
     try {
-      const decoded = this.jwtService.verify(token);
+      const decodedRaw = (await this.jwtService.verifyAsync(token)) as unknown;
 
-      const user = await this.usersRepository.findOne({
-        where: { id: decoded.sub}
-      });
+      if (typeof decodedRaw !== 'object' || decodedRaw === null || !('sub' in decodedRaw)) {
+        throw new BadRequestException('Invalid token');
+      }
+
+      // safe extraction + normalization
+      const subRaw = (decodedRaw as { sub: unknown }).sub;
+      const sub =
+        typeof subRaw === 'string'
+          ? subRaw
+          : subRaw instanceof Types.ObjectId
+          ? subRaw.toHexString()
+          : String(subRaw);
+
+      const user = (await this.userModel.findById(sub).exec()) as UserDocument | null;
       if (!user) {
         throw new BadRequestException('Invalid token or user does not exist');
       }
+
       if (user.isEmailVerified) {
-        return {message: 'Email already verified.'};
+        return { message: 'Email already verified.' };
       }
 
       user.isEmailVerified = true;
-      await this.usersRepository.save(user);
+      await user.save();
 
-      return { 
+      return {
         message: 'Email verified successfully.',
         user: {
-          id: user.id,
+          id: sub,
           email: user.email,
           name: user.name,
-          isEmailVerified: true
-        }
+          isEmailVerified: true,
+        },
       };
-    }
-    catch (error) {
+    } catch (error: unknown) {
+      //log safely if you want (avoid unsafe-member-access)
+      console.error('verifyEmail error', String(error));
       throw new BadRequestException('Invalid or expired token');
     }
   }

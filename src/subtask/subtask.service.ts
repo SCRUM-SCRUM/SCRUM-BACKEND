@@ -1,75 +1,66 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Subtask } from './entities/subtask.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Subtask, SubtaskDocument } from './schemas/subtask.schema';
 import { CreateSubtaskDto } from './dto/create-subtask.dto';
 import { UpdateSubtaskDto } from './dto/update-subtask.dto';
-import { Task } from '../tasks/entities/task.entity';
+import { Task } from '../tasks/task.schema';
 import { SubtaskGateway } from './subtask.gateway';
 
 @Injectable()
 export class SubtaskService {
   constructor(
-    @InjectRepository(Task)
-    private readonly taskRepository: Repository<Task>,
+    @InjectModel(Task.name) private readonly taskModel: Model<SubtaskDocument>,
     private subtaskGateway: SubtaskGateway,
-     @InjectRepository(Subtask)
-    private readonly subtaskRepository: Repository<Subtask>
+    @InjectModel(Subtask.name) private readonly subtaskModel: Model<SubtaskDocument>,
   ) {}
 
-  async create(dto: CreateSubtaskDto): Promise<Subtask> {
-    const task = await this.taskRepository.findOneBy({ id: dto.taskId });
+  async create(dto: CreateSubtaskDto): Promise<SubtaskDocument> {
+    const task = await this.taskModel.findById(dto.taskId).exec();
     if (!task) throw new Error('Task not found');
-    const subtask = this.subtaskRepository.create({ title: dto.title, task });
+    const subtask = new this.subtaskModel({ title: dto.title, task });
     this.subtaskGateway.broadcastSubtaskUpdate('subtask.created', subtask);
-    return this.subtaskRepository.save(subtask);
+    return subtask.save();
   }
 
-  findAll(): Promise<Subtask[]> {
-    return this.subtaskRepository.find({ relations: ['task'] });
+  findAll(): Promise<SubtaskDocument[]> {
+    return this.subtaskModel.find().populate('task').exec();
   }
 
-  async findOne(id: number): Promise<Subtask> {
-    const subtask = await this.subtaskRepository.findOne({ where: { id }, relations: ['task'] });
+  async findOne(id: number): Promise<SubtaskDocument> {
+    const subtask = await this.subtaskModel.findOne({ _id: id }).populate('task').exec();
     if (!subtask) {
       throw new Error('Subtask not found');
-
     }
     this.subtaskGateway.broadcastSubtaskUpdate('subtask.found', subtask);
     return subtask;
   }
 
-  async update(id: number, dto: UpdateSubtaskDto): Promise<Subtask> {
-    await this.subtaskRepository.update(id, dto);
-    const updatedSubtask = await this.subtaskRepository.findOne({ where: { id }, relations: ['task'] });
+  async update(id: number, dto: UpdateSubtaskDto): Promise<SubtaskDocument> {
+    const updatedSubtask = await this.subtaskModel.findOneAndUpdate({ _id: id }, dto, { new: true, runValidators: true }).populate('task').exec();
     if (!updatedSubtask) {
-        throw new Error('Subtask not found');
+      throw new Error('Subtask not found');
     }
     this.subtaskGateway.broadcastSubtaskUpdate('subtask.updated', updatedSubtask);
-    return this.findOne(id);
+    return updatedSubtask;
   }
 
   async remove(id: number): Promise<void> {
-    await this.subtaskRepository.delete(id);
-    this.subtaskGateway.broadcastSubtaskUpdate('subtask.deleted', { id });
+    const result = await this.subtaskModel.findByIdAndDelete(id).exec();
+    if (result) {
+      this.subtaskGateway.broadcastSubtaskUpdate('subtask.deleted', { id });
+    }
   }
 
-  async findAllForTask(taskId: number): Promise<Subtask[]> {
-    const task = await this.taskRepository.findOneBy({ id: taskId });
+  async findAllForTask(taskId: string): Promise<SubtaskDocument[]> {
+    const task = await this.taskModel.findById(taskId).exec();
     if (!task) {
-        throw new Error('Task not found');
+      throw new Error('Task not found');
     }
     this.subtaskGateway.broadcastSubtaskUpdate('subtasks.foundForTask', { taskId });
-    return this.subtaskRepository.find({
-    where: { task: { id: taskId } },
-    relations: ['task'],
-    
-  });
+    return this.subtaskModel.find({ task: taskId }).populate('task').exec();
+  }
 }
 
-
-}
-
-
-export { Subtask };
-
+export { SubtaskDocument as Subtask };

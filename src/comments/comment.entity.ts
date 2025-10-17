@@ -1,29 +1,31 @@
-import { Entity,PrimaryGeneratedColumn,Column,ManyToOne,CreateDateColumn, UpdateDateColumn} from 'typeorm';
-import { Task } from '../tasks/entities/task.entity';
-import { User } from '../users/user.entity';
-import { CalendarTask } from '../entities/calendartask.entity';
+/* eslint-disable prettier/prettier */
+// /* eslint-disable prettier/prettier */
+// /import { Entity,PrimaryGeneratedColumn,Column,ManyToOne,CreateDateColumn, UpdateDateColumn} from 'typeorm';
+// import { Task } from '../tasks/entities/task.entity';
+// import { User } from '../users/user.entity';
+// import { CalendarTask } from '../entities/calendartask.entity';
 
-@Entity()
-export class Comment {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+// @Entity()
+// export class Comment {
+//   @PrimaryGeneratedColumn('uuid')
+//   id: string;
 
-  @Column()
-  content: string;
+//   @Column()
+//   content: string;
 
-  @ManyToOne(() => Task, (task: Task) => task.comments)
-  task: Task;
+//   @ManyToOne(() => Task, (task: Task) => task.comments)
+//   task: Task;
 
-  @ManyToOne(() => User, user => user.comments, { onDelete: 'CASCADE' })
-  user: User;
+//   @ManyToOne(() => User, user => user.comments, { onDelete: 'CASCADE' })
+//   user: User;
 
-  @ManyToOne(() => CalendarTask, calendarTask => calendarTask.comments)
-  calendarTask: CalendarTask;
+//   @ManyToOne(() => CalendarTask, calendarTask => calendarTask.comments)
+//   calendarTask: CalendarTask;
 
 
-  @CreateDateColumn()
-  createdAt: Date;
+//   @CreateDateColumn()
+//   createdAt: Date;
 
-  @UpdateDateColumn()
-  updatedAt: Date;
-}
+//   @UpdateDateColumn()
+//   updatedAt: Date;
+// }

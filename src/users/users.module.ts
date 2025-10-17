@@ -1,21 +1,15 @@
+/* eslint-disable prettier/prettier */
 // users/users.module.ts
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './user.entity';
-import { UsersService } from './users.service';
-import { UsersController } from './users.controller';
-import { ConfigModule } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { User, UserSchema } from './user.schema';
+import { UsersService } from './user.service';
+import { UserController } from './user.controller';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User]),
-    ConfigModule,
-  ],
-  controllers: [UsersController],
+  imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])],
+  controllers: [UserController],
   providers: [UsersService],
-  exports: [
-    UsersService,
-    TypeOrmModule.forFeature([User]), // Export repository
-  ],
+  exports: [UsersService],
 })
-export class UsersModule {}
+export class UserModule {}

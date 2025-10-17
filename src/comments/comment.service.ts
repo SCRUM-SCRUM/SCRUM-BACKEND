@@ -1,63 +1,102 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Comment } from './comment.entity';
-import { Task } from '../tasks/entities/task.entity';
-import { CommentGateway } from './comment.gateway';
+/* eslint-disable prettier/prettier */
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
+import { Comment } from './comment.schema';
+import { Task } from '../tasks/task.schema';
 
 @Injectable()
 export class CommentService {
   constructor(
-    @InjectRepository(Comment)
-    private commentRepo: Repository<Comment>,
-    @InjectRepository(Task)
-    private taskRepo: Repository<Task>,
-   ) {}
+    @InjectModel(Comment.name) private readonly commentModel: Model<Comment>,
+    @InjectModel(Task.name) private readonly taskModel: Model<Task>,
+  ) {}
 
-  async addComment(taskId: string, content: string, userId: string) {
-    const task = await this.taskRepo.findOne({ where: { id: Number(taskId) } });
-    if (!task) throw new NotFoundException('Task not found');
+  // ✅ Create new comment
+  async create(data: Partial<Comment>) {
+    const comment = new this.commentModel(data);
+    return comment.save();
+  }
 
-    const comment = this.commentRepo.create({
+  // ✅ Add comment to a task
+  async addComment(taskId: string, userId: string, content: string) {
+    if (!Types.ObjectId.isValid(taskId)) {
+      throw new BadRequestException('Invalid task ID format');
+    }
+
+    const task = await this.taskModel.findById(taskId);
+    if (!task) {
+      throw new BadRequestException(`Task with ID ${taskId} not found`);
+    }
+
+    const comment = new this.commentModel({
       content,
-      task,
-      user: { id: userId } as any,
+      userId: new Types.ObjectId(userId),
+      taskId: new Types.ObjectId(taskId),
+      createdAt: new Date(),
     });
-    const savedComment = await this.commentRepo.save(comment);
 
-    return this.commentRepo.save(comment);
+    const savedComment = await comment.save();
+
+    if (Array.isArray(task.comments)) {
+      task.comments.push(savedComment._id as Types.ObjectId);
+      await task.save();
+    }
+
+    return savedComment;
   }
 
-   async editComment(commentId: string, content: string) {
-    const comment = await this.commentRepo.findOne({
-      where: { id: commentId },
-      relations: ['task'],
-    });
-    if (!comment) throw new NotFoundException('Comment not found');
-    return this.commentRepo.save(comment);
+  // ✅ Get all comments for a specific task
+  async getComments(taskId: string) {
+    return this.commentModel.find({ taskId }).populate('userId').exec();
   }
 
-  async deleteComment(commentId: string) {
-    const comment = await this.commentRepo.findOne({
-      where: { id: commentId },
-      relations: ['task'],
-    });
-    if (!comment) throw new NotFoundException('Comment not found');
+  // ✅ Edit a comment (update content)
+  async editComment(commentId: string, newContent: string, userId: string) {
+    if (!Types.ObjectId.isValid(commentId)) {
+      throw new BadRequestException('Invalid comment ID format');
+    }
 
-    const taskId = comment.task.id;
-    await this.commentRepo.remove(comment);
-    return { taskId };
+    const comment = await this.commentModel.findById(commentId);
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    // Optional: Restrict editing to the comment's owner
+    if (comment.userId.toString() !== userId.toString()) {
+      throw new BadRequestException('You can only edit your own comments');
+    }
+
+    comment.content = newContent;
+    comment.updatedAt = new Date();
+
+    return comment.save();
   }
 
+  // ✅ Delete a comment
+  async deleteComment(commentId: string, userId: string) {
+    if (!Types.ObjectId.isValid(commentId)) {
+      throw new BadRequestException('Invalid comment ID format');
+    }
 
-  async getComments(taskId: string) { 
-    const task = await this.taskRepo.findOne({ where: { id: Number(taskId) } });
-    if (!task) throw new NotFoundException('Task not found');
-    return this.commentRepo.find({
-      where: { task: { id: Number(taskId) } },
-      relations: ['user'],
-      order: { createdAt: 'ASC' },
-    
-    });
+    const comment = await this.commentModel.findById(commentId);
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    // Optional: Restrict deletion to the comment's owner
+    if (comment.userId.toString() !== userId.toString()) {
+      throw new BadRequestException('You can only delete your own comments');
+    }
+
+    // Remove comment reference from task.comments (if exists)
+    await this.taskModel.updateOne(
+      { _id: comment.taskId },
+      { $pull: { comments: comment._id } }
+    );
+
+    await this.commentModel.findByIdAndDelete(commentId);
+
+    return { message: 'Comment deleted successfully' };
   }
 }

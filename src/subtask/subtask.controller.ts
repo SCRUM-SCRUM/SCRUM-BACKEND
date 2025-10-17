@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 // src/subtasks/subtask.controller.ts
 import { Controller, Post, Get, Param, Body, Put, Delete } from '@nestjs/common';
 import { SubtaskService } from './subtask.service';

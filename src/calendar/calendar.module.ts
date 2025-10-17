@@ -1,14 +1,19 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { CalendarTask } from '../entities/calendartask.entity';
+import { MongooseModule } from '@nestjs/mongoose';
+import { CalendarTask, CalendarTaskSchema } from './schemas/calendar-task.schema';
 import { CalendarController } from './calendar.controller';
 import { CalendarService } from './calendar.service';
-import { TaskGateway } from './calendar.gateway';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([CalendarTask])],
+  imports: [
+    MongooseModule.forFeature([
+      { name: CalendarTask.name, schema: CalendarTaskSchema }
+    ]),
+  ],
+  providers: [CalendarService],
   controllers: [CalendarController],
-  providers: [CalendarService, TaskGateway],
   exports: [CalendarService],
 })
+export class CalendarTaskModule {}
 export class CalendarModule {}

@@ -1,40 +1,48 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { ColumnEntity, ColumnName } from './entities/column.entity';
-import { Repository } from 'typeorm';
-import { Workspace } from '@/workspace/entities/workspace.entity';
+/* eslint-disable prettier/prettier */
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Column, ColumnName } from './schemas/column.schema';
+import { Workspace } from '@/workspace/schemas/workspace.schema';
 import { ColumnGateway } from './column.gateway';
 
 @Injectable()
 export class ColumnService {
   constructor(
-    @InjectRepository(ColumnEntity)
-    private readonly columnRepo: Repository<ColumnEntity>,
-    
-    @InjectRepository(Workspace)
-    private readonly workspaceRepo: Repository<Workspace>,
+    @InjectModel(Column.name)
+    private readonly columnModel: Model<Column>,
+
+    @InjectModel(Workspace.name)
+    private readonly workspaceModel: Model<Workspace>,
+
     private readonly columnGateway: ColumnGateway,
   ) {}
 
-  async create(workspaceId: number, name: string): Promise<ColumnEntity> {
-    const workspace = await this.workspaceRepo.findOneBy({ id: workspaceId });
-
+  async create(workspaceId: string, name: string): Promise<Column> {
+    // Check if workspace exists
+    const workspace = await this.workspaceModel.findById(workspaceId);
     if (!workspace) {
-      throw new Error(`Workspace with ID ${workspaceId} not found`);
+      throw new NotFoundException(`Workspace with ID ${workspaceId} not found`);
     }
 
+    // Validate column name
     if (!Object.values(ColumnName).includes(name as ColumnName)) {
-      throw new Error(`Invalid column name: ${name}`);
+      throw new BadRequestException(`Invalid column name: ${name}`);
     }
 
-    const column = this.columnRepo.create({
+    // Create new column document
+    const column = new this.columnModel({
       name: name as ColumnName,
-      workspace,
+      workspace: workspace._id,
       order: 0,
       tasks: [],
     });
+
+    await column.save();
+
+    // Broadcast event via WebSocket
     this.columnGateway.broadcastColumnUpdate('column.created', column);
 
-    return this.columnRepo.save(column);
+    return column;
   }
 }

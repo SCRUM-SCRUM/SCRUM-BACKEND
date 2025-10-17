@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Delete, Param, Body, UseGuards } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
 import { UsersService } from './users.service';
 
 
@@ -12,12 +13,12 @@ export class UsersController {
   }
 
   @Post()
-  async create(@Body() createUserDto: any) {
+  async create(@Body() createUserDto: { name: string; email: string; password: string }) {
     return this.usersService.create(createUserDto);
   }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+    return this.usersService.remove(id);
   }
 }

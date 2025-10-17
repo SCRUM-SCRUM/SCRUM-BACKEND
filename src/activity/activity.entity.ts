@@ -1,19 +1,21 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+/* eslint-disable prettier/prettier */
+// /* eslint-disable prettier/prettier */
+// import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
-@Entity()
-export class Activity {
-  @PrimaryGeneratedColumn()
-  id: number;
+// @Entity()
+// export class Activity {
+//   @PrimaryGeneratedColumn()
+//   id: number;
 
-  @Column() 
-  userId: number;
+//   @Column() 
+//   userId: number;
 
-  @Column()
-  projectId: number;
+//   @Column()
+//   projectId: number;
 
-  @Column()
-  content: string;
+//   @Column()
+//   content: string;
 
-  @CreateDateColumn()
-  createdAt: Date;
-}
+//   @CreateDateColumn()
+//   createdAt: Date;
+// }
