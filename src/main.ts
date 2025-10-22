@@ -4,6 +4,9 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+// import dotenv from 'dotenv'
+
+// dotenv.config()
 
 async function bootstrap(): Promise<void> {
   // Create the Nest app
@@ -45,7 +48,7 @@ async function bootstrap(): Promise<void> {
    app.useWebSocketAdapter(new IoAdapter(app));
 
     // Start the application (use the env PORT if present)
-  const port = process.env.PORT ? Number(process.env.PORT) : 4000; // default 4000
+  const port = process.env.PORT || 4000; // default 4000
   await app.listen(port, '0.0.0.0');
 
   // Log success message

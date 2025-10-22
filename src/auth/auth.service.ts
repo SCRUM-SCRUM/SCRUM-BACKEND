@@ -79,7 +79,7 @@ export class AuthService {
    * Register a new user
    */
   async register(registerDto: RegisterDto) {
-    const { email, password, name } = registerDto;
+    const { name, email, password } = registerDto;
 
     const existingUser = (await this.userModel.findOne({ email }).exec()) as UserDocument | null;
     

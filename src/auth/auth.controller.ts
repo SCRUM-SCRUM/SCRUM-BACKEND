@@ -56,7 +56,7 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
-  @Get('verify')
+  @Get('verify-email')
   async verifyEmail(@Query('token') token: string) {
     if (!token) {
       throw new BadRequestException('Token is required');
