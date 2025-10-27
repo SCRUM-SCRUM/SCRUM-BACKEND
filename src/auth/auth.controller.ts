@@ -1,13 +1,13 @@
 /* eslint-disable prettier/prettier */
+/* eslint-disable prettier/prettier */
 import {
   Controller,
   Post,
   Body,
   Request,
   UseGuards,
-  Get,
-  Query,
   BadRequestException,
+
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
@@ -15,26 +15,24 @@ import { RegisterDto } from './dto/register.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose'; // <-- Import Types from Mongoose
+import { Model, Types } from 'mongoose';
 import { User, UserDocument } from '../users/user.schema';
 import { MailService } from './mail/mail.service';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
-// 1. Define the MINIMUM required structure for the retrieved user document.
-// This is the cleanest way to tell TypeScript: "I know this UserDocument has these fields."
-// Note: We are using Omit<T, K> to remove the default, potentially conflicting _id
-// and then adding the specific Mongoose ObjectId type for _id.
 type ResendVerificationUser = Omit<UserDocument, '_id'> & {
-  _id: Types.ObjectId; // Ensures .toString() is valid and safe
+  _id: Types.ObjectId;
   email: string;
   isEmailVerified: boolean;
 };
 
-// Define an interface for the request object used in the login method
 interface LocalAuthenticatedRequest extends Request {
   user: UserDocument;
 }
 
-
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -52,12 +50,14 @@ export class AuthController {
   }
 
   @Post('register')
+  @ApiBody({ type: RegisterDto })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
-  @Get('verify-email')
-  async verifyEmail(@Query('token') token: string) {
+  @Post('verify-email')
+  async verifyEmail(@Body('token') bodytoken: string) {
+    const token = bodytoken
     if (!token) {
       throw new BadRequestException('Token is required');
     }
@@ -66,30 +66,38 @@ export class AuthController {
 
   @Post('resend-verification')
   async resendVerification(@Body() body: ResendVerificationDto) {
-    // 2. Cast the result to the new, safe type.
     const user = (await this.userModel.findOne({ email: body.email }).exec()) as ResendVerificationUser | null;
 
     if (!user) {
       throw new BadRequestException('Email not found');
     }
 
-    // Now, 'isEmailVerified' is safely accessible
     if (user.isEmailVerified) {
       throw new BadRequestException('Email already verified');
     }
 
-    // Now, '_id.toString()' is safe because it's typed as Mongoose ObjectId
     const token = this.jwtService.sign(
       { sub: user._id.toString(), purpose: 'email_verification' },
       { expiresIn: '1d' },
     );
 
-    // Now, 'email' is safely accessible
-    //Option A: If mail service is async
-    // await this.mailService.sendVerificationEmail(user.email, token);
-    //Option B: If mail service is sync
     this.mailService.sendVerificationEmail(user.email, token);
 
     return { message: 'New verification email sent' };
   }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Request a password reset email' })
+  @ApiBody({ type: ForgotPasswordDto })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return await this.authService.forgotPassword(dto.email);
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password with token' })
+  @ApiBody({ type: ResetPasswordDto })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return await this.authService.resetPassword(dto.token, dto.newPassword);
+  }
 }
+ 

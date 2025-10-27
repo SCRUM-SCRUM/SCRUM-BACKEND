@@ -4,6 +4,8 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+
 // import dotenv from 'dotenv'
 
 // dotenv.config()
@@ -46,6 +48,18 @@ async function bootstrap(): Promise<void> {
   });
 
    app.useWebSocketAdapter(new IoAdapter(app));
+
+   const config = new DocumentBuilder()
+    .setTitle('Polaris Scrum API')
+    .setDescription('API documentation for Polaris Scrum backend')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+    const document = SwaggerModule.createDocument(app, config, {
+      deepScanRoutes: true,
+    });
+    SwaggerModule.setup('api/docs', app, document);
 
     // Start the application (use the env PORT if present)
   const port = process.env.PORT || 4000; // default 4000

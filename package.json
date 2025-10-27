@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "node dist/main.js",
+    "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main.js",
@@ -17,7 +17,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "docs": "compodoc -p tsconfig.json --includes src --toggleMenuItems=routes -d documentation",
+    "docs:serve": "compodoc -s -d documentation"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -58,6 +60,7 @@
     "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
+    "@compodoc/compodoc": "^1.1.31",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^10.4.9",
