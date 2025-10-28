@@ -76,6 +76,13 @@ export class AuthController {
       throw new BadRequestException('Email already verified');
     }
 
+    if (!user) {
+    // Security: don't reveal if email exists
+    return { 
+      message: 'If the email exists in our system, a new verification link has been sent' 
+    };
+  }
+
     const token = this.jwtService.sign(
       { sub: user._id.toString(), purpose: 'email_verification' },
       { expiresIn: '1d' },
