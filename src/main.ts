@@ -4,6 +4,11 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+
+// import dotenv from 'dotenv'
+
+// dotenv.config()
 
 async function bootstrap(): Promise<void> {
   // Create the Nest app
@@ -23,7 +28,7 @@ async function bootstrap(): Promise<void> {
 
   // Enable CORS
   app.enableCors({
-    origin: ['http://localhost:5173'], // Frontend origin
+    origin: ['http://13.61.183.31','http://localhost:5173'], // Frontend origin
     credentials: true,
   });
 
@@ -45,11 +50,12 @@ async function bootstrap(): Promise<void> {
    app.useWebSocketAdapter(new IoAdapter(app));
 
   // Start the application
-  const port = process.env.PORT ? Number(process.env.PORT) : 4000;
+  const port = process.env.PORT ? Number(process.env.PORT) : 3000;
   await app.listen(4000, '0.0.0.0');
 
   // Log success message
   console.log(`Server running at http://localhost:${port}/api`);
+
 }
 
 // Bootstrap safely (handles rejections)

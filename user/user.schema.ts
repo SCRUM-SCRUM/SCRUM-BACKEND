@@ -5,7 +5,7 @@ import { UserRole } from './user-role.enum';
 
 export type UserDocument = User & Document;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: 'polaris' })
 export class User extends Document {
   @Prop({ required: true, unique: true })
   email: string;
