@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Commitment, CommitmentStatus } from './commitments.schema';
 import { CreateCommitmentDto } from './dto/create-commitment.dto';
 import { UpdateCommitmentDto } from './dto/update-commitment.dto';
@@ -36,6 +36,11 @@ export class CommitmentsService {
 
   // ✅ Find One
   async findOne(id: string): Promise<Commitment> {
+    // Validate ObjectId format
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid commitment ID format');
+    }
+    
     const item = await this.commitmentModel.findById(id).exec();
     if (!item) throw new NotFoundException('Commitment not found');
     return item;
@@ -129,6 +134,18 @@ export class CommitmentsService {
       item.archived = true;
       const saved = await item.save();
       this.gateway.broadcast('commitment.archived', saved);
+      return saved;
+    }
+    return item;
+  }
+
+  // ✅ Restore from Archive
+  async restore(id: string): Promise<Commitment> {
+    const item = await this.findOne(id);
+    if (item.archived) {
+      item.archived = false;
+      const saved = await item.save();
+      this.gateway.broadcast('commitment.restored', saved);
       return saved;
     }
     return item;

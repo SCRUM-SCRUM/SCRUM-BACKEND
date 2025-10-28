@@ -70,6 +70,11 @@ export class CommitmentsController {
     return await this.svc.archive(id);
   }
 
+  @Patch(':id/restore')
+  async restore(@Param('id') id: string): Promise<any> {
+    return await this.svc.restore(id);
+  }
+
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin', 'scrum_master')

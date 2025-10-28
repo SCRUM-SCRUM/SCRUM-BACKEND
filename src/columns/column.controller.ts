@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Post, Body, Param } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get } from '@nestjs/common';
 import { ColumnService } from './column.service';
 import { Column } from './schemas/column.schema';
 
@@ -12,6 +12,11 @@ export class ColumnController {
     @Param('workspaceId') workspaceId: string,
     @Body('name') name: string,
   ): Promise<Column> {
-    return this.columnService.create(workspaceId, name); // Remove the + operator
+    return this.columnService.create(workspaceId, name);
+  }
+
+  @Get(':workspaceId')
+  async findByWorkspace(@Param('workspaceId') workspaceId: string): Promise<Column[]> {
+    return this.columnService.findByWorkspace(workspaceId);
   }
 }

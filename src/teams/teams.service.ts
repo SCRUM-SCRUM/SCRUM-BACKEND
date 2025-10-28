@@ -23,10 +23,36 @@ export class TeamsService {
     return await this.teamModel.find().populate('members').exec();
   }
 
+  // Get a specific team by ID
+  async getTeamById(id: string): Promise<Team> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid team ID format');
+    }
+    
+    const team = await this.teamModel.findById(id).populate('members').exec();
+    if (!team) {
+      throw new NotFoundException('Team not found');
+    }
+    return team;
+  }
+
   // Create a new member and link to a team (accepts team id or team doc)
   async createMember(name: string, role: string, teamIdOrDoc: string | Team): Promise<Member> {
+    // Validate inputs
+    if (!name || !role) {
+      throw new NotFoundException('Name and role are required');
+    }
+
     // Resolve team id
-    const teamId = typeof teamIdOrDoc === 'string' ? new Types.ObjectId(teamIdOrDoc) : teamIdOrDoc._id;
+    let teamId: Types.ObjectId;
+    if (typeof teamIdOrDoc === 'string') {
+      if (!Types.ObjectId.isValid(teamIdOrDoc)) {
+        throw new NotFoundException('Invalid team ID format');
+      }
+      teamId = new Types.ObjectId(teamIdOrDoc);
+    } else {
+      teamId = teamIdOrDoc._id as Types.ObjectId;
+    }
 
     // Ensure team exists
     const team = await this.teamModel.findById(teamId).exec();
@@ -48,6 +74,10 @@ export class TeamsService {
 
   // Update team name
   async updateTeam(id: string, name: string): Promise<Team> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid team ID format');
+    }
+
     const updated = await this.teamModel.findByIdAndUpdate(
       id,
       { name },
@@ -58,8 +88,36 @@ export class TeamsService {
     return updated;
   }
 
+  // Delete a team and all its members
+  async deleteTeam(id: string): Promise<{ success: boolean }> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid team ID format');
+    }
+
+    const team = await this.teamModel.findById(id).exec();
+    if (!team) {
+      throw new NotFoundException('Team not found');
+    }
+
+    // Delete all members of this team
+    await this.memberModel.deleteMany({ team: team._id }).exec();
+
+    // Delete the team
+    await this.teamModel.findByIdAndDelete(id).exec();
+
+    return { success: true };
+  }
+
   // Update member details
   async updateMember(id: string, name: string, role: string): Promise<Member> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid member ID format');
+    }
+
+    if (!name || !role) {
+      throw new NotFoundException('Name and role are required');
+    }
+
     const updated = await this.memberModel.findByIdAndUpdate(
       id,
       { name, role },
@@ -70,8 +128,12 @@ export class TeamsService {
     return updated;
   }
 
-  // Optional: remove member (decrement count and remove from members array)
+  // Remove member (decrement count and remove from members array)
   async removeMember(id: string): Promise<{ success: boolean }> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Invalid member ID format');
+    }
+
     const member = await this.memberModel.findById(id).exec();
     if (!member) throw new NotFoundException('Member not found');
 
