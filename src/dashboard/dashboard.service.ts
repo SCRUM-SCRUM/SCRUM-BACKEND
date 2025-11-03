@@ -20,7 +20,8 @@ export class DashboardService {
     private readonly meetingModel: Model<Meeting>,
   ) {}
 
-  async getMetrics(userId?: string): Promise<DashboardMetricsDto> {
+  async getMetrics(): Promise<DashboardMetricsDto> {
+    
     const [completedTasks, inProgressTasks, teamMembers, activeWorkspaces, totalWorkspaces] =
       await Promise.all([
         this.taskService.countByStatus('Done'),

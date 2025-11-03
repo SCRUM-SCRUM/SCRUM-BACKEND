@@ -1,15 +1,14 @@
 /* eslint-disable prettier/prettier */
-// src/users/dto/create-user.dto.ts
-
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsNotEmpty } from 'class-validator';
 
-export class RegisterDto {
+export class CreateUserDto {
   @ApiProperty({
     example: 'John Doe',
     description: 'The full name of the user',
   })
   @IsString()
+  @IsNotEmpty()
   name: string;
 
   @ApiProperty({
@@ -17,6 +16,7 @@ export class RegisterDto {
     description: 'The user email address (must be unique)',
   })
   @IsEmail()
+  @IsNotEmpty()
   email: string;
 
   @ApiProperty({
@@ -25,11 +25,8 @@ export class RegisterDto {
   })
   @IsString()
   @MinLength(8)
+  @IsNotEmpty()
   password: string;
 }
 
-export class CreateUserDto {
-  readonly name: string;
-  readonly email: string;
-  readonly password: string;
-}
+// Remove RegisterDto to avoid confusion
