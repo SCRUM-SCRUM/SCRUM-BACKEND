@@ -28,5 +28,3 @@ export class CreateUserDto {
   @IsNotEmpty()
   password: string;
 }
-
-// Remove RegisterDto to avoid confusion

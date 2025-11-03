@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 // import dotenv from 'dotenv'
