@@ -21,8 +21,8 @@ async function bootstrap(): Promise<void> {
   // Enable validation across all routes
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Strip properties not in DTO
-      forbidNonWhitelisted: false, // Allow extra properties silently
+      // whitelist: true, // Strip properties not in DTO
+      // forbidNonWhitelisted: true, // Allow extra properties silently
       transform: true, // Automatically transform payloads to DTOs
     }),
   );
