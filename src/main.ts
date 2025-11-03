@@ -22,7 +22,7 @@ async function bootstrap(): Promise<void> {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true, // Strip properties not in DTO
-      forbidNonWhitelisted: true, // Allow extra properties silently
+      forbidNonWhitelisted: false, // Allow extra properties silently
       transform: true, // Automatically transform payloads to DTOs
     }),
   );
