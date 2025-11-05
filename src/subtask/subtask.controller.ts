@@ -30,7 +30,18 @@ export class SubtaskController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.subtaskService.remove(id);
+async remove(@Param('id') id: string) {
+  const deleted = await this.subtaskService.remove(id);
+
+  if (!deleted) {
+    return { success: false, message: 'Subtask not found' };
   }
+
+  return {
+    success: true,
+    message: 'Subtask deleted successfully',
+    subtaskId: id,
+  };
+}
+
 }
