@@ -19,7 +19,7 @@ export class TaskController {
 
   @Post(':taskId/subtasks')
   createSubtask(
-    @Param('taskId') taskId: number,
+    @Param('taskId') taskId: string,
     @Body() dto: CreateSubtaskDto,
   ) {
     return this.subtaskService.create({ ...dto, taskId });

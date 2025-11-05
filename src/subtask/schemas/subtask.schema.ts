@@ -1,16 +1,12 @@
 /* eslint-disable prettier/prettier */
-// src/subtasks/schemas/subtask.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { Task } from '../../tasks/task.schema';
 
 export type SubtaskDocument = Subtask & Document;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Subtask {
-  @Prop({ type: Types.ObjectId, auto: true })
-  _id: Types.ObjectId;
-
   @Prop({ required: true })
   title: string;
 

@@ -11,18 +11,24 @@ import { SubtaskGateway } from './subtask.gateway';
 @Injectable()
 export class SubtaskService {
   constructor(
-    @InjectModel(Task.name) private readonly taskModel: Model<SubtaskDocument>,
+    @InjectModel(Task.name) private readonly taskModel: Model<Task>,
     private subtaskGateway: SubtaskGateway,
     @InjectModel(Subtask.name) private readonly subtaskModel: Model<SubtaskDocument>,
   ) {}
 
-  async create(dto: CreateSubtaskDto): Promise<SubtaskDocument> {
-    const task = await this.taskModel.findById(dto.taskId).exec();
-    if (!task) throw new Error('Task not found');
-    const subtask = new this.subtaskModel({ title: dto.title, task });
-    this.subtaskGateway.broadcastSubtaskUpdate('subtask.created', subtask);
-    return subtask.save();
-  }
+ async create(dto: CreateSubtaskDto): Promise<SubtaskDocument> {
+  const task = await this.taskModel.findById(dto.taskId);
+  if (!task) throw new Error('Task not found');
+
+  const subtask = await this.subtaskModel.create({
+    title: dto.title,
+    task: dto.taskId,
+  });
+
+  this.subtaskGateway.broadcastSubtaskUpdate('subtask.created', subtask);
+  return subtask;
+}
+
 
   findAll(): Promise<SubtaskDocument[]> {
     return this.subtaskModel.find().populate('task').exec();
