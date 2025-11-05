@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Post, Body, Param, Get } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, Put, Delete } from '@nestjs/common';
 import { ColumnService } from './column.service';
+import { UpdateColumnDto } from './dto/update-column.dto';
 
 @Controller('columns')
 export class ColumnController {
@@ -28,5 +29,15 @@ export class ColumnController {
   @Get(':workspaceId')
   async findByWorkspace(@Param('workspaceId') workspaceId: string) {
     return this.columnService.findByWorkspace(workspaceId);
+  }
+  
+  @Put(':columnId')
+  update(@Param('columnId') columnId: string, @Body() dto: UpdateColumnDto) {
+    return this.columnService.update(columnId, dto);
+  }
+
+  @Delete(':columnId')
+  remove(@Param('columnId') columnId: string) {
+    return this.columnService.remove(columnId);
   }
 }

@@ -5,6 +5,7 @@ import { Model, Types } from 'mongoose';
 import { Column, ColumnName } from './schemas/column.schema';
 import { Workspace } from '../workspace/workspace.schema';
 import { ColumnGateway } from './column.gateway';
+import { UpdateColumnDto } from './dto/update-column.dto';
 
 @Injectable()
 export class ColumnService {
@@ -77,4 +78,40 @@ export class ColumnService {
       .populate('tasks')
       .exec();
   }
+
+  async update(columnId: string, dto: UpdateColumnDto) {
+  if (!Types.ObjectId.isValid(columnId)) {
+    throw new BadRequestException(`Invalid column ID format: ${columnId}`);
+  }
+
+  const column = await this.columnModel.findByIdAndUpdate(
+    columnId,
+    { $set: dto },
+    { new: true, runValidators: true }
+  );
+
+  if (!column) {
+    throw new NotFoundException(`Column with ID ${columnId} not found`);
+  }
+
+  this.columnGateway.broadcastColumnUpdate('column.updated', column);
+
+  return column;
+}
+
+async remove(columnId: string) {
+  if (!Types.ObjectId.isValid(columnId)) {
+    throw new BadRequestException(`Invalid column ID format: ${columnId}`);
+  }
+
+  const column = await this.columnModel.findByIdAndDelete(columnId);
+
+  if (!column) {
+    throw new NotFoundException(`Column with ID ${columnId} not found`);
+  }
+
+  this.columnGateway.broadcastColumnUpdate('column.deleted', { columnId });
+
+  return column;
+}
 }
