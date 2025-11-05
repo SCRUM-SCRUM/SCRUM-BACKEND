@@ -8,6 +8,7 @@ import { Comment } from '../../comments/comment.schema';
 
 export enum TaskStatus {
   TO_DO = 'To Do',
+  PENDING = 'Pending',
   IN_PROGRESS = 'In Progress',
   QA = 'QA',
   BLOCKED = 'Blocked',
