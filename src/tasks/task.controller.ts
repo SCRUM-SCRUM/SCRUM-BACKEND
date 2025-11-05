@@ -32,14 +32,14 @@ export class TaskController {
 
   @Put('subtasks/:id')
   updateSubtask(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Body() dto: UpdateSubtaskDto,
   ) {
     return this.subtaskService.update(id, dto);
   }
 
   @Delete('subtasks/:id')
-  deleteSubtask(@Param('id') id: number) {
+  deleteSubtask(@Param('id') id: string) {
     return this.subtaskService.remove(id);
   }
 

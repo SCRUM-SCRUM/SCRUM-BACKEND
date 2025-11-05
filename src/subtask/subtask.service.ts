@@ -34,7 +34,7 @@ export class SubtaskService {
     return this.subtaskModel.find().populate('task').exec();
   }
 
-  async findOne(id: number): Promise<SubtaskDocument> {
+  async findOne(id: string): Promise<SubtaskDocument> {
     const subtask = await this.subtaskModel.findOne({ _id: id }).populate('task').exec();
     if (!subtask) {
       throw new Error('Subtask not found');
@@ -43,7 +43,7 @@ export class SubtaskService {
     return subtask;
   }
 
-  async update(id: number, dto: UpdateSubtaskDto): Promise<SubtaskDocument> {
+  async update(id: string, dto: UpdateSubtaskDto): Promise<SubtaskDocument> {
     const updatedSubtask = await this.subtaskModel.findOneAndUpdate({ _id: id }, dto, { new: true, runValidators: true }).populate('task').exec();
     if (!updatedSubtask) {
       throw new Error('Subtask not found');
@@ -52,7 +52,7 @@ export class SubtaskService {
     return updatedSubtask;
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     const result = await this.subtaskModel.findByIdAndDelete(id).exec();
     if (result) {
       this.subtaskGateway.broadcastSubtaskUpdate('subtask.deleted', { id });
