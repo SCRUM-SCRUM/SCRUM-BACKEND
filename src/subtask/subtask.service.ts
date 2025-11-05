@@ -52,12 +52,14 @@ export class SubtaskService {
     return updatedSubtask;
   }
 
-  async remove(id: string): Promise<void> {
-    const result = await this.subtaskModel.findByIdAndDelete(id).exec();
-    if (result) {
-      this.subtaskGateway.broadcastSubtaskUpdate('subtask.deleted', { id });
-    }
+  async remove(id: string): Promise<SubtaskDocument | null> {
+  const result = await this.subtaskModel.findByIdAndDelete(id).exec();
+  if (result) {
+    this.subtaskGateway.broadcastSubtaskUpdate('subtask.deleted', { id });
   }
+  return result;
+}
+
 
   async findAllForTask(taskId: string): Promise<SubtaskDocument[]> {
     const task = await this.taskModel.findById(taskId).exec();
