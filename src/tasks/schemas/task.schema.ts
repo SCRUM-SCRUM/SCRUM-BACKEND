@@ -7,7 +7,7 @@ import { Subtask } from '../../subtask/schemas/subtask.schema';
 import { Comment } from '../../comments/comment.schema';
 
 export enum TaskStatus {
-  TO_DO = 'To Do',
+  TODO = 'Todo',
   PENDING = 'Pending',
   IN_PROGRESS = 'In Progress',
   QA = 'QA',
