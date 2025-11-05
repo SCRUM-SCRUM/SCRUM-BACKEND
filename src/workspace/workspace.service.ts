@@ -9,7 +9,7 @@ import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 export class WorkspaceService {
   constructor(@InjectModel(Workspace.name) private workspaceModel: Model<Workspace>) {}
 
-  async create(dto: CreateWorkspaceDto): Promise<Workspace> {
+  async create(dto: CreateWorkspaceDto, ownerId: string): Promise<Workspace> {
   const members = dto.members
     ? dto.members
         .filter(Boolean)
@@ -17,8 +17,9 @@ export class WorkspaceService {
         .filter((m): m is Types.ObjectId => !!m)
     : [];
 
-  const payload: Partial<Workspace> = {
+   const payload: Partial<Workspace> = {
     name: dto.name,
+    owner: new Types.ObjectId(ownerId),
     ...(dto.description ? { description: dto.description } : {}),
     ...(members.length ? { members } : {}),
   };

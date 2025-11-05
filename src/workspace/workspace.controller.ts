@@ -1,5 +1,10 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable prettier/prettier */
+/* eslint-disable prettier/prettier */
+import { Controller, Get, Post, Body, Param, Put, Delete, Req } from '@nestjs/common';
 import { WorkspaceService } from './workspace.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 
@@ -8,8 +13,8 @@ export class WorkspaceController {
   constructor(private readonly workspaceService: WorkspaceService) {}
 
   @Post()
-  async create(@Body() data: CreateWorkspaceDto) {
-    return await this.workspaceService.create(data);
+  async create(@Req() req, @Body() data: CreateWorkspaceDto) {
+    return this.workspaceService.create(data, req.user.userId);
   }
 
   @Get()
