@@ -1,4 +1,6 @@
 /* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable prettier/prettier */
 import { Controller, Post, Param, Body, Put, Delete, Get } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateSubtaskDto } from '../subtask/dto/create-subtask.dto';
@@ -40,6 +42,32 @@ export class TaskController {
   deleteSubtask(@Param('id') id: number) {
     return this.subtaskService.remove(id);
   }
+
+@Post()
+createTask(@Body() createTaskDto) {
+  return this.taskService.create(createTaskDto);
+}
+
+@Get()
+getTasks() {
+  return this.taskService.findAll();
+}
+
+@Get(':id')
+getTask(@Param('id') id: string) {
+  return this.taskService.findOne(id);
+}
+
+@Put(':id')
+updateTask(@Param('id') id: string, @Body() updateTaskDto) {
+  return this.taskService.update(id, updateTaskDto);
+}
+
+@Delete(':id')
+deleteTask(@Param('id') id: string) {
+  return this.taskService.remove(id);
+}
+
 }
 
 

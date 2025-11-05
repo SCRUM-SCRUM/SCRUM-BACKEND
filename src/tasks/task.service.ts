@@ -1,35 +1,51 @@
 /* eslint-disable prettier/prettier */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Task } from './task.schema';
+import { Task } from './schemas/task.schema';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
 
 @Injectable()
 export class TaskService {
-  constructor(@InjectModel(Task.name) private taskModel: Model<Task>) {}
+  constructor(
+    @InjectModel(Task.name)
+    private readonly taskModel: Model<Task>,
+  ) {}
 
-  async create(data: Partial<Task>) {
-    const task = new this.taskModel(data);
+  async create(dto: CreateTaskDto) {
+    const task = new this.taskModel({
+      ...dto,
+      status: dto.status ?? 'Pending',
+    });
     return task.save();
   }
 
   async findAll() {
-    return this.taskModel.find().populate('projectId assignedTo').exec();
+    return this.taskModel.find().exec();
   }
 
-  async findByProject(projectId: string) {
-    return this.taskModel.find({ projectId }).populate('assignedTo').exec();
+  async findOne(id: string) {
+    const task = await this.taskModel.findById(id).exec();
+    if (!task) throw new NotFoundException(`Task with ID ${id} not found`);
+    return task;
   }
 
-  async updateStatus(id: string, status: string) {
-    return this.taskModel.findByIdAndUpdate(id, { status }, { new: true }).exec();
+  async update(id: string, dto: UpdateTaskDto) {
+    const updated = await this.taskModel.findByIdAndUpdate(id, dto, {
+      new: true,
+    });
+    if (!updated) throw new NotFoundException(`Task with ID ${id} not found`);
+    return updated;
   }
 
-  async delete(id: string) {
-    return this.taskModel.findByIdAndDelete(id).exec();
+  async remove(id: string) {
+    const deleted = await this.taskModel.findByIdAndDelete(id).exec();
+    if (!deleted) throw new NotFoundException(`Task with ID ${id} not found`);
+    return deleted;
   }
 
-  async countByStatus(status: string): Promise<number> {
-  return this.taskModel.countDocuments({ status });
-}
+  async countByStatus(status: string) {
+    return this.taskModel.countDocuments({ status }).exec();
+  }
 }

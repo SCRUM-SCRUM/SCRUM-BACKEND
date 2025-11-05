@@ -10,7 +10,6 @@ export class Task extends Document {
   @Prop()
   description: string;
 
-   // ✅ Add this new line to reference comments
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Comment' }] })
   comments: Types.ObjectId[];
 
@@ -23,7 +22,7 @@ export class Task extends Document {
   @Prop({ type: Types.ObjectId, ref: 'User' })
   assignedTo: Types.ObjectId;
 
-  @Prop({ default: 'pending' })
+  @Prop({ default: 'pending' }) // Pending | In Progress | Done
   status: string;
 }
 
