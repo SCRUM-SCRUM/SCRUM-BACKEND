@@ -30,14 +30,24 @@ export class ColumnController {
   async findByWorkspace(@Param('workspaceId') workspaceId: string) {
     return this.columnService.findByWorkspace(workspaceId);
   }
-  
+
   @Put(':columnId')
-  update(@Param('columnId') columnId: string, @Body() dto: UpdateColumnDto) {
-    return this.columnService.update(columnId, dto);
+  async update(@Param('columnId') columnId: string, @Body() dto: UpdateColumnDto) {
+    const updatedColumn = await this.columnService.update(columnId, dto);
+
+    return {
+      message: 'Column updated successfully',
+      data: updatedColumn,
+    };
   }
 
   @Delete(':columnId')
-  remove(@Param('columnId') columnId: string) {
-    return this.columnService.remove(columnId);
+  async remove(@Param('columnId') columnId: string) {
+    const deletedColumn = await this.columnService.remove(columnId);
+
+    return {
+      message: 'Column deleted successfully',
+      data: deletedColumn, // ✅ full deleted document
+    };
   }
 }
