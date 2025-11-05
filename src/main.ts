@@ -51,7 +51,7 @@ async function bootstrap(): Promise<void> {
    app.useWebSocketAdapter(new IoAdapter(app));
 
   // Start the application
-  const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+  const port = process.env.PORT ? Number(process.env.PORT) : 4000;
   await app.listen(4000, '0.0.0.0');
 
   // Log success message
