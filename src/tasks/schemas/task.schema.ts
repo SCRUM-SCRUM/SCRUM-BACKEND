@@ -44,7 +44,7 @@ export class Task {
   @Prop()
   dueDate?: Date;
 
-  @Prop({ type: String, enum: Object.values(TaskStatus), default: TaskStatus.TO_DO })
+  @Prop({ type: String, enum: Object.values(TaskStatus), default: TaskStatus.TODO })
   status: TaskStatus;
 
   @Prop({ type: String, enum: Object.values(Priority), default: Priority.MEDIUM })
