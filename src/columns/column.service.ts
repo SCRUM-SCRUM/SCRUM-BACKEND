@@ -18,49 +18,45 @@ export class ColumnService {
     private readonly columnGateway: ColumnGateway,
   ) {}
 
-  async create(workspaceId: string, name: string): Promise<Column> {
-    // Validate workspaceId
-    if (!Types.ObjectId.isValid(workspaceId)) {
-      throw new BadRequestException(`Invalid workspace ID format: ${workspaceId}`);
-    }
-
-    // Check if workspace exists
-    const workspace = await this.workspaceModel.findById(workspaceId);
-    if (!workspace) {
-      throw new NotFoundException(`Workspace with ID ${workspaceId} not found`);
-    }
-
-    // Validate column name
-    if (!Object.values(ColumnName).includes(name as ColumnName)) {
-      throw new BadRequestException(`Invalid column name: ${name}`);
-    }
-
-    // Get the highest order number for columns in this workspace
-    const existingColumns = await this.columnModel
-      .find({ workspace: workspace._id })
-      .sort({ order: -1 })
-      .limit(1)
-      .exec();
-
-    // Calculate the next order (horizontal addition - increment order)
-    const nextOrder = existingColumns.length > 0 ? existingColumns[0].order + 1 : 0;
-
-    // Create the column document
-    const column = new this.columnModel({
-      name: name as ColumnName,
-      workspace: workspace._id,
-      order: nextOrder,
-      tasks: [],
-    });
-
-    // Save to DB
-    const savedColumn = await column.save();
-
-    // Broadcast real-time event
-    this.columnGateway.broadcastColumnUpdate('column.created', savedColumn);
-
-    return savedColumn;
+  async create(workspaceId: string, name: string) {
+  if (!Types.ObjectId.isValid(workspaceId)) {
+    throw new BadRequestException(`Invalid workspace ID format: ${workspaceId}`);
   }
+
+  const workspace = await this.workspaceModel.findById(workspaceId);
+  if (!workspace) {
+    throw new NotFoundException(`Workspace with ID ${workspaceId} not found`);
+  }
+
+  // Normalize column name (to accept Todo, todo, TODO etc.)
+  const normalized = name.trim().toLowerCase();
+  const validNames = Object.values(ColumnName).map(n => n.toLowerCase());
+
+  if (!validNames.includes(normalized)) {
+    throw new BadRequestException(`Invalid column name: ${name}`);
+  }
+
+  const existingColumns = await this.columnModel
+    .find({ workspace: workspace._id })
+    .sort({ order: -1 })
+    .limit(1);
+
+  const nextOrder = existingColumns.length ? existingColumns[0].order + 1 : 0;
+
+  const column = new this.columnModel({
+    name: Object.values(ColumnName).find(n => n.toLowerCase() === normalized),
+    workspace: workspace._id,
+    order: nextOrder,
+    tasks: [],
+  });
+
+  const savedColumn = await column.save();
+
+  this.columnGateway.broadcastColumnUpdate('column.created', savedColumn);
+
+  return savedColumn;
+}
+
 
   async findByWorkspace(workspaceId: string): Promise<Column[]> {
     // Validate workspaceId

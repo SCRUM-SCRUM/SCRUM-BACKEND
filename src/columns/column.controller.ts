@@ -1,7 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { Controller, Post, Body, Param, Get } from '@nestjs/common';
 import { ColumnService } from './column.service';
-import { Column } from './schemas/column.schema';
 
 @Controller('columns')
 export class ColumnController {
@@ -11,12 +10,23 @@ export class ColumnController {
   async create(
     @Param('workspaceId') workspaceId: string,
     @Body('name') name: string,
-  ): Promise<Column> {
-    return this.columnService.create(workspaceId, name);
+  ) {
+    const column = await this.columnService.create(workspaceId, name);
+
+    return {
+      message: 'Column created successfully',
+      data: {
+        _id: column._id,
+        name: column.name,
+        order: column.order,
+        workspace: column.workspace,
+        tasks: column.tasks,
+      },
+    };
   }
 
   @Get(':workspaceId')
-  async findByWorkspace(@Param('workspaceId') workspaceId: string): Promise<Column[]> {
+  async findByWorkspace(@Param('workspaceId') workspaceId: string) {
     return this.columnService.findByWorkspace(workspaceId);
   }
 }
