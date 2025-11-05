@@ -14,9 +14,7 @@ interface JwtPayload {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private configService: ConfigService) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     super({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken() as (req: Request) => string | null,
       ignoreExpiration: false,
       secretOrKey: configService.get<string>('JWT_SECRET') || 'default_secret_key',
@@ -26,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   validate(payload: JwtPayload) {
     console.log('JWT validated:', payload);
     return {
-      id: payload.sub,
+      UserId: payload.sub,
       email: payload.email,
       name: payload.name,
     };
