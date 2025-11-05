@@ -5,11 +5,14 @@ import { Workspace } from '../../workspace/workspace.schema';
 import { Task } from '../../tasks/task.schema';
 
 export enum ColumnName {
-  TO_DO = 'To Do',
+  TODO = 'Todo',
+  PENDING = 'Pending',
   IN_PROGRESS = 'In Progress',
   QA = 'QA',
   BLOCKED = 'Blocked',
   DONE = 'Done',
+  REVIEW = 'Review',
+  TESTING = 'Testing',
 }
 
 @Schema({ timestamps: true })
