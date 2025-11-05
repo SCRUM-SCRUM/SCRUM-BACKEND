@@ -45,8 +45,21 @@ export class WorkspaceService {
   }
 
   async delete(id: string) {
-    return this.workspaceModel.findByIdAndDelete(id);
+  const deleted = await this.workspaceModel.findByIdAndDelete(id);
+
+  if (!deleted) {
+    return {
+      success: false,
+      message: 'Workspace not found',
+    };
   }
+
+  return {
+    success: true,
+    message: 'Workspace deleted successfully',
+    data: deleted,
+  };
+}
 
   async countActiveWorkspaces(): Promise<number> {
     return this.workspaceModel.countDocuments({ isActive: true });

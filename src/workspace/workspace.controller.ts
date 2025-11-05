@@ -35,7 +35,20 @@ export class WorkspaceController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return await this.workspaceService.delete(id);
+async remove(@Param('id') id: string) {
+  const deleted = await this.workspaceService.delete(id);
+
+  if (!deleted) {
+    return {
+      success: false,
+      message: "Workspace not found"
+    };
   }
+
+  return {
+    success: true,
+    message: "Workspace deleted successfully",
+    workspaceId: id
+  };
+}
 }
