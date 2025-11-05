@@ -13,6 +13,8 @@ export enum TaskStatus {
   QA = 'QA',
   BLOCKED = 'Blocked',
   DONE = 'Done',
+  REVIEW = 'Review',
+  TESTING = 'Testing',
 }
 
 export enum Priority {
