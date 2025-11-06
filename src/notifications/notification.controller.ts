@@ -38,7 +38,7 @@ export class NotificationController {
   @Post()
   async create(
     @Body() dto: CreateNotificationDto,
-    @Query('userId') userId?: string,
+    @Body('userId') userId?: string,
   ): Promise<{ message: string; created: NotificationResponse }> {
     if (!userId) {
       throw new BadRequestException('userId is required');
