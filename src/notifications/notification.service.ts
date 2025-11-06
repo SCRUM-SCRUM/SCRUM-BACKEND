@@ -5,7 +5,6 @@ import { Model} from 'mongoose';
 import { Notification, NotificationDocument } from './schemas/notification.schema';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { Task } from '../tasks/task.schema';
-import { UserDocument } from '../users/user.schema';
 import { Types } from 'mongoose';
 
 @Injectable()
@@ -18,10 +17,10 @@ export class NotificationService {
   ) {}
 
   // CREATE NOTIFICATION
-  async create(user: UserDocument, dto: CreateNotificationDto): Promise<NotificationDocument> {
+  async create(userId:string, dto: CreateNotificationDto): Promise<NotificationDocument> {
     const notification = new this.notificationModel({
       ...dto,
-      recipient: user._id,
+      recipient: new Types.ObjectId(userId),
     });
     return await notification.save();
   }
