@@ -1,8 +1,10 @@
 /* eslint-disable prettier/prettier */
-import { IsMongoId, IsString } from 'class-validator';
+import { IsMongoId, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateCommentDto {
   @IsString()
+  @MinLength(1)
+  @MaxLength(1000)
   content: string;
 
   @IsMongoId({ message: 'Invalid taskId, must be Mongo ObjectId' })

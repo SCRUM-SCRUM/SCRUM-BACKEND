@@ -11,25 +11,23 @@ export class CommentController {
     @Param('taskId') taskId: string,
     @Body() body: { content: string; userId: string },
   ) {
-    return this.commentService.addComment(taskId, body.content, body.userId);
+    return this.commentService.addComment(taskId, body.userId, body.content);
   }
 
   @Put(':commentId')
   editComment(
-    @Param('taskId') taskId: string,
     @Param('commentId') commentId: string,
-    @Body() body: { content: string },
+    @Body() body: { content: string; userId: string }, // Add userId to body
   ) {
-    
-    return this.commentService.editComment(commentId, body.content, taskId);
+    return this.commentService.editComment(commentId, body.content, body.userId); // Pass userId, not taskId
   }
 
-   @Delete(':commentId')
+  @Delete(':commentId')
   deleteComment(
-    @Param('taskId') taskId: string,
     @Param('commentId') commentId: string,
+    @Body() body: { userId: string }, // Add userId to body for delete
   ) {
-    return this.commentService.deleteComment(commentId, taskId);
+    return this.commentService.deleteComment(commentId, body.userId); // Pass userId, not taskId
   }
 
   @Get()

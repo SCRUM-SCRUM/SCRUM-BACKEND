@@ -38,6 +38,10 @@ export class CommentService {
 
     const savedComment = await comment.save();
 
+     if (!task.comments) {
+    task.comments = [];
+  }
+  
     if (Array.isArray(task.comments)) {
       task.comments.push(savedComment._id as Types.ObjectId);
       await task.save();
