@@ -41,7 +41,7 @@ export class CommentService {
      if (!task.comments) {
     task.comments = [];
   }
-  
+
     if (Array.isArray(task.comments)) {
       task.comments.push(savedComment._id as Types.ObjectId);
       await task.save();
@@ -50,10 +50,16 @@ export class CommentService {
     return savedComment;
   }
 
-  // ✅ Get all comments for a specific task
-  async getComments(taskId: string) {
-    return this.commentModel.find({ taskId }).populate('userId').exec();
+ // ✅ Get all comments for a specific task
+async getComments(taskId: string) {
+  if (!Types.ObjectId.isValid(taskId)) {
+    throw new BadRequestException('Invalid task ID format');
   }
+  
+  return this.commentModel.find({ 
+    taskId: new Types.ObjectId(taskId) 
+  }).populate('userId').exec();
+}
 
   // ✅ Edit a comment (update content)
   async editComment(commentId: string, newContent: string, userId: string) {
