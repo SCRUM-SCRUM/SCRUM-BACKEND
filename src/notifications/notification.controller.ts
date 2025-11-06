@@ -15,10 +15,6 @@ import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { BadRequestException } from '@nestjs/common'; // Import for error handling
 
-/**
- * Lightweight response shapes (avoid returning Mongoose Document types directly).
- * These match what your service actually returns (lean objects or updated docs).
- */
 export interface NotificationResponse {
   // existing notification fields (keep flexible)
   _id?: string;

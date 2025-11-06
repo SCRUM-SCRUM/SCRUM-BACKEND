@@ -10,6 +10,9 @@ export class CreateNotificationDto {
   message: string;
 
   @IsString()
+  userId: string;
+
+  @IsString()
   @IsOptional()
   link?: string;
 }
