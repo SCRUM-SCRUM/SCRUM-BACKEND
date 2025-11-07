@@ -10,7 +10,7 @@ import * as bcrypt from 'bcryptjs';
 import { User, UserDocument } from '../users/user.schema';
 import { RegisterDto } from './dto/register.dto';
 
-type JwtPayload = { sub: string; email?: string; purpose?: string };
+type JwtPayload = { sub: string; email?: string; purpose?: string; role: string;};
 
 @Injectable()
 export class AuthService {
@@ -35,7 +35,8 @@ export class AuthService {
 
     const sub = user._id instanceof Types.ObjectId ? user._id.toHexString() : String(user._id);
 
-    const payload: JwtPayload = { sub, email: user.email };
+    const payload: JwtPayload = { sub, email: user.email, role: user.role,
+     };
     const access_token: string = await this.jwtService.signAsync(payload);
 
     return {
@@ -44,6 +45,7 @@ export class AuthService {
       user: {
         id: sub,
         email: user.email,
+        role: user.role,
         name: user.name,
         isEmailVerified: !!user.isEmailVerified,
       },

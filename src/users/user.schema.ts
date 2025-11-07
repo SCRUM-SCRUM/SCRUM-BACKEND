@@ -1,4 +1,5 @@
 /* eslint-disable prettier/prettier */
+/* eslint-disable prettier/prettier */
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 // ⚠️ Import HydratedDocument instead of Document for the final type
 import { Document, Types, HydratedDocument } from 'mongoose';
@@ -26,9 +27,6 @@ export class User { // 💡 User class should NOT extend Document
   @Prop({ type: String, default: null })
   verificationToken: string;
 
-  // MongoDB automatically handles createdAt/updatedAt with timestamps
-  // You don't need to explicitly define this if timestamps: true is used, 
-  // but keeping it won't hurt, though the schema property type is usually enough.
   createdAt: Date; 
   updatedAt: Date; // Added standard Mongoose timestamp field
 
@@ -41,9 +39,14 @@ export class User { // 💡 User class should NOT extend Document
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Task' }] })
   tasks: Task[];
+
+  @Prop({
+    type: String,
+    enum:['member', 'admin', 'scrum_master'],
+    default: 'member',
+  })
+  role: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
-// ✅ CORRECT FIX: Use HydratedDocument<User> which merges the schema fields 
-// with the Mongoose Document methods and properties (like _id) correctly.
 export type UserDocument = HydratedDocument<User>;
