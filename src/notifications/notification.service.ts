@@ -106,6 +106,6 @@ export class NotificationService {
       id,
       { $set: { isDeleted: false } },
       { new: true },
-    );
+    )
   }
 }

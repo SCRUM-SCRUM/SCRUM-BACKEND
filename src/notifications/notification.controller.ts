@@ -106,8 +106,16 @@ export class NotificationController {
 
   // RESTORE (for soft-delete setups)
   @Patch(':id/restore')
-  async restore(@Param('id') id: string): Promise<NotificationResponse | null> {
-    const restored = await this.notifications.restore(id);
-    return restored ? (restored.toObject ? restored.toObject() : restored) as NotificationResponse : null;
+  async restore(@Param('id') id: string): Promise<{ message: string; data?: NotificationResponse }> {
+  const restored = await this.notifications.restore(id);
+
+  if (!restored) {
+    return { message: 'Notification not found or already active' };
   }
+
+  return {
+    message: 'Notification restored successfully',
+    data: (restored.toObject ? restored.toObject() : restored) as NotificationResponse,
+  };
+}
 }
