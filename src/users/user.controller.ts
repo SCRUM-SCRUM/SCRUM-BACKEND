@@ -44,27 +44,22 @@ export class UserController {
   }
 
   @Patch(':id/role')
-  @UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'))
 async updateUserRole(
   @Param('id') id: string,
   @Body('role') role: 'admin' | 'scrum_master' | 'member',
-   @Req() req: Request
+  @Req() req: Request,
 ) {
-   const currentUser = (req as any).user;
+  const currentUser = (req as any).user;
+
   if (!currentUser) {
     throw new ForbiddenException('No authenticated user found on request');
   }
 
-  // keep your authorization logic here
+  // Single, correct authorization check
   if (currentUser.userId !== id && currentUser.role !== 'admin') {
     throw new ForbiddenException('You can only change your own role unless you are admin');
   }
-
-  
- // ✅ Allow admins to update anyone, but members only themselves
-if ((req as any).user.role !== 'admin' && (req as any).user.userId !== id) {
-  throw new ForbiddenException('You can only update your own role');
-}
 
 return this.userService.updateRole(id, role);
 
