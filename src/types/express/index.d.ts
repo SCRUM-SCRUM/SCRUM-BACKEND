@@ -1,12 +1,10 @@
 /* eslint-disable prettier/prettier */
-// src/types/express.d.ts
 declare namespace Express {
   export interface Request {
     user?: {
       userId?: string;
       email?: string;
-      role?: 'member' | 'admin' | 'scrum_master' 
-      [k: string]: any;
+      role?: string;
     };
   }
 }

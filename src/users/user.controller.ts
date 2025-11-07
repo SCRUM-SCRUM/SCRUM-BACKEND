@@ -1,4 +1,6 @@
 /* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable prettier/prettier */
 /* eslint-disable prettier/prettier */
@@ -8,6 +10,8 @@ import { UsersService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ForbiddenException } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('users')
 export class UserController {
@@ -40,11 +44,23 @@ export class UserController {
   }
 
   @Patch(':id/role')
+  @UseGuards(AuthGuard('jwt'))
 async updateUserRole(
   @Param('id') id: string,
   @Body('role') role: 'admin' | 'scrum_master' | 'member',
    @Req() req: Request
 ) {
+   const currentUser = (req as any).user;
+  if (!currentUser) {
+    throw new ForbiddenException('No authenticated user found on request');
+  }
+
+  // keep your authorization logic here
+  if (currentUser.userId !== id && currentUser.role !== 'admin') {
+    throw new ForbiddenException('You can only change your own role unless you are admin');
+  }
+
+  
  // ✅ Allow admins to update anyone, but members only themselves
 if ((req as any).user.role !== 'admin' && (req as any).user.userId !== id) {
   throw new ForbiddenException('You can only update your own role');
