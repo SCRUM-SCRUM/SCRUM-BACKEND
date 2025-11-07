@@ -10,10 +10,12 @@ import { LocalStrategy } from './local.strategy';
 import { MailService } from './mail/mail.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from '../users/user.schema';
+import { UserModule } from '../users/users.module';
 
 @Module({
   imports: [
     ConfigModule,
+    UserModule, // ✅ import module, not service
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     PassportModule,
     JwtModule.registerAsync({
