@@ -14,7 +14,6 @@ export class CreateCommitmentDto {
   assigneeId?: string;
 
    @IsOptional()
-  @IsUUID()
   description?: string;
 
   @IsOptional()
