@@ -54,7 +54,7 @@ export class NotificationController {
     @Param('userId') userId: string,
     @Query('limit') limit?: string,
     @Query('cursor') cursor?: string,
-  ): Promise<NotificationResponse[]> {
+  ): Promise<NotificationResponse> {
     const parsedLimit = limit ? parseInt(limit, 10) : undefined;
     const parsedCursor = cursor ? new Date(cursor) : undefined;
     // Service returns lean objects enhanced with isValid: boolean — not full Mongoose docs.
@@ -63,7 +63,7 @@ export class NotificationController {
       parsedLimit,
       parsedCursor,
     );
-    return notifications as unknown as NotificationResponse[];
+    return notifications as unknown as NotificationResponse;
   }
 
   // UNREAD COUNT

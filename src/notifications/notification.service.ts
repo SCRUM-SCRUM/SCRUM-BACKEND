@@ -27,7 +27,7 @@ export class NotificationService {
 
   // GET USER NOTIFICATIONS
   async findUserNotifications(userId: string, limit = 20, cursor?: Date) {
-    const query: Record<string, unknown> = { recipient: userId };
+    const query: Record<string, unknown> = { recipient: new Types.ObjectId(userId) };
     if (cursor) query['createdAt'] = { $lt: cursor };
 
     const notifications = await this.notificationModel
