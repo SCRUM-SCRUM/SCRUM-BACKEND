@@ -1,4 +1,6 @@
 /* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -48,20 +50,29 @@ export class UserController {
 async updateUserRole(
   @Param('id') id: string,
   @Body('role') role: 'admin' | 'scrum_master' | 'member',
-  @Req() req: Request,
+  @Req() req: any,
 ) {
-  const currentUser = (req as any).user;
+  const currentUser = req.user;
+
+  console.log('currentUser:', JSON.stringify(currentUser, null, 2));
+  console.log('Target ID:', id);
 
   if (!currentUser) {
-    throw new ForbiddenException('No authenticated user found on request');
+    throw new ForbiddenException('No authenticated user found');
   }
 
-  // Single, correct authorization check
-  if (currentUser.userId !== id && currentUser.role !== 'admin') {
+  const currentUserId = currentUser.userId?.toString();
+  const currentRole = (currentUser.role || '').toString().trim();
+
+  console.log('currentUserId:', currentUserId);
+  console.log('currentRole:', currentRole);
+  console.log('Is own ID?', currentUserId === id);
+  console.log('Is admin?', currentRole === 'admin');
+
+  if (currentUserId !== id && currentRole !== 'admin') {
     throw new ForbiddenException('You can only change your own role unless you are admin');
   }
 
-return this.userService.updateRole(id, role);
-
+  return this.userService.updateRole(id, role);
 }
 }
