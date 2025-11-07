@@ -1,8 +1,13 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+/* eslint-disable prettier/prettier */
+import { Controller, Get, Post, Body, Param, Delete, Put, Patch, UseGuards} from '@nestjs/common';
 import { UsersService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Roles } from '@/commitment/roles.decorator';
+import { RolesGuard } from '@/commitment/roles.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('users')
 export class UserController {
@@ -31,5 +36,16 @@ export class UserController {
   @Delete(':id')
   async remove(@Param('id') id: string): Promise<unknown> {
     return await this.userService.delete(id);
+  }
+
+   // ✅ Only admins can change user roles
+  @Patch(':id/role')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  async updateUserRole(
+    @Param('id') id: string,
+    @Body('role') role: 'admin' | 'scrum_master' | 'member',
+  ) {
+    return this.userService.updateRole(id, role);
   }
 }

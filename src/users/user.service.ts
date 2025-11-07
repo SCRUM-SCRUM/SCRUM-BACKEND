@@ -50,4 +50,25 @@ export class UsersService {
   async countAll(): Promise<number> {
     return await this.userModel.countDocuments().exec();
   }
+
+  //Update User Role
+  async updateRole(userId: string, role: 'admin' | 'scrum_master' | 'member') {
+    const updatedUser = await this.userModel
+      .findByIdAndUpdate(
+        userId,
+        { role },
+        { new: true }, // return updated doc
+      )
+      .lean()
+      .exec();
+
+    if (!updatedUser) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    return {
+      message: `User role updated successfully to ${role}`,
+      user: updatedUser,
+    };
+  }
 }
