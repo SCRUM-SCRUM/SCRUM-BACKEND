@@ -41,7 +41,7 @@ export class UserController {
    // ✅ Only admins can change user roles
   @Patch(':id/role')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin')
+  @Roles('member')
   async updateUserRole(
     @Param('id') id: string,
     @Body('role') role: 'admin' | 'scrum_master' | 'member',
