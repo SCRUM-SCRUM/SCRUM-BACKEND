@@ -13,17 +13,14 @@ export class CreateCommitmentDto {
   @IsUUID()
   assigneeId?: string;
 
-   @IsOptional()
   description?: string;
 
   @IsOptional()
   linkedTaskId?: string;
 
-  @IsOptional()
   @IsEnum(['High', 'Medium', 'Low'])
   priority?: 'High' | 'Medium' | 'Low';
 
-  @IsOptional()
   @IsEnum(CommitmentStatus)
   status?: CommitmentStatus;
 }
