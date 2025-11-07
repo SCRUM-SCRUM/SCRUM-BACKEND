@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model} from 'mongoose';
+import { Model, UpdateResult} from 'mongoose';
 import { Notification, NotificationDocument } from './schemas/notification.schema';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { Task } from '../tasks/task.schema';
@@ -69,11 +69,12 @@ export class NotificationService {
   }
 
   // MARK ALL AS READ
-  async markAllAsRead(userId: string): Promise<void> {
-    await this.notificationModel.updateMany(
+  async markAllAsRead(userId: string): Promise<UpdateResult> {
+    const result = await this.notificationModel.updateMany(
       { recipient: userId, isRead: false },
       { $set: { isRead: true } },
     );
+    return result;
   }
 
   // MARK ONE AS READ

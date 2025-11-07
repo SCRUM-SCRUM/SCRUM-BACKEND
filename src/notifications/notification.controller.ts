@@ -8,8 +8,6 @@ import {
   Delete,
   Post,
   Body,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -75,10 +73,13 @@ export class NotificationController {
 
   // MARK ALL AS READ
   @Patch('user/:userId/mark-all-read')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async markAllAsRead(@Param('userId') userId: string): Promise<void> {
-    await this.notifications.markAllAsRead(userId);
-    // no content response (204)
+  async markAllAsRead(@Param('userId') userId: string): Promise<{message: string; count: number}> {
+    const result = await this.notifications.markAllAsRead(userId);
+    
+    return {
+      message: 'All notifications marked as read succesfully',
+      count: result?.modifiedCount ?? 0,
+    };
   }
 
   // MARK ONE AS READ
