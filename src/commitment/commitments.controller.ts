@@ -17,6 +17,7 @@ import { CreateCommitmentDto } from './dto/create-commitment.dto';
 import { UpdateCommitmentDto } from './dto/update-commitment.dto';
 import { Roles } from './roles.decorator';
 import { RolesGuard } from './roles.guard';
+import { AuthGuard } from '@nestjs/passport';
 
 // ✅ Match the expected shape from the service
 type TabType = 'All' | 'Upcoming' | 'Due Today' | 'Completed' | 'Archived';
@@ -76,8 +77,8 @@ export class CommitmentsController {
   }
 
   @Delete(':id')
-  @UseGuards(RolesGuard)
-  @Roles('member', 'admin', 'scrum_master')
+  @UseGuards(AuthGuard('jwt'), RolesGuard) // JWT first!
+  @Roles('admin', 'scrum_master')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string): Promise<void> {
     await this.svc.remove(id);
