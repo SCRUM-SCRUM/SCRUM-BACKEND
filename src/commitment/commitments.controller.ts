@@ -77,7 +77,7 @@ export class CommitmentsController {
 
   @Delete(':id')
   @UseGuards(RolesGuard)
-  @Roles('admin', 'scrum_master')
+  @Roles('member', 'admin', 'scrum_master')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string): Promise<void> {
     await this.svc.remove(id);
