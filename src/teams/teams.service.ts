@@ -55,7 +55,7 @@ export class TeamsService {
     }
 
     // Ensure team exists
-    const team = await this.teamModel.findById(teamId).exec();
+    const team = await this.teamModel.findById((new Types.ObjectId (teamId))).exec();
     if (!team) throw new NotFoundException('Team not found');
 
     // Create member
