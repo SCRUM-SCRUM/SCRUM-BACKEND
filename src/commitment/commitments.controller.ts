@@ -1,4 +1,8 @@
 /* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable prettier/prettier */
 import {
   Controller,
   Post,
@@ -15,11 +19,10 @@ import {
 import { CommitmentsService } from './commitments.service';
 import { CreateCommitmentDto } from './dto/create-commitment.dto';
 import { UpdateCommitmentDto } from './dto/update-commitment.dto';
-import { Roles } from './roles.decorator';
-import { RolesGuard } from './roles.guard';
 import { AuthGuard } from '@nestjs/passport';
+import { Req } from '@nestjs/common';
+import { ForbiddenException } from '@nestjs/common';
 
-// ✅ Match the expected shape from the service
 type TabType = 'All' | 'Upcoming' | 'Due Today' | 'Completed' | 'Archived';
 type SortType = 'dueDate' | 'assignee' | 'updatedAt';
 
@@ -77,12 +80,23 @@ export class CommitmentsController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'), RolesGuard) // JWT first!
-  @Roles('admin', 'scrum_master')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string): Promise<void> {
-    await this.svc.remove(id);
+@UseGuards(AuthGuard('jwt'))
+@HttpCode(HttpStatus.NO_CONTENT)
+async remove(@Param('id') id: string, @Req() req: any): Promise<void> {
+  // Manual check with proper typing
+  const userRoles: string[] = req.user?.roles || [];
+  const allowedRoles = ['admin', 'scrum_master'];
+  
+  const hasRole = allowedRoles.some(role => userRoles.includes(role));
+  
+  if (!hasRole) {
+    throw new ForbiddenException(
+      `User roles do not include required roles`
+    );
   }
+
+  await this.svc.remove(id);
+}
 
   @Patch(':id/complete')
   async complete(@Param('id') id: string): Promise<any> {

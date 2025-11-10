@@ -42,10 +42,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     return {
-      userId: user.id,  // ← Now 100% typed
+      userId: user.id,
       email: user.email,
       name: payload.name,
-      role: user.role,              // ← Also typed
+      role: user.role,
     };
   }
 }
