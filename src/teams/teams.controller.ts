@@ -29,7 +29,7 @@ export class TeamsController {
     @Body('name') name: string,
     @Body('role') role: string,
   ): Promise<Member> {
-    return this.teamsService.createMember(name, role, { id } as Team);
+    return this.teamsService.createMember(name, role, id);
   }
 
   @Patch(':id')
