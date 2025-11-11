@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Get, Post, Patch, Delete, Body, Query, Param, BadRequestException } from '@nestjs/common';
 import { CalendarService } from './calendar.service';
 import { CreateTaskDto } from './dto/create-task.dto';

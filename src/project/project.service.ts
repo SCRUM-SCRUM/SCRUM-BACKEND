@@ -26,6 +26,7 @@ export class ProjectService {
   }
 
   async delete(id: string) {
-    return this.projectModel.findByIdAndDelete(id).exec();
+    await this.projectModel.findByIdAndDelete(id).exec();
+    return {message: 'Project Deleted Successfully'};
   }
 }
