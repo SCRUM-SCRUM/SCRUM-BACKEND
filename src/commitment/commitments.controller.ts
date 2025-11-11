@@ -12,8 +12,6 @@ import {
   Param,
   Patch,
   Delete,
-  HttpCode,
-  HttpStatus,
   UseGuards,
 } from '@nestjs/common';
 import { CommitmentsService } from './commitments.service';
@@ -84,8 +82,7 @@ export class CommitmentsController {
   @Delete(':id')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('admin','scrum_master')
-@HttpCode(HttpStatus.NO_CONTENT)
-async remove(@Param('id') id: string, @Req() req: any): Promise<void> {
+async remove(@Param('id') id: string, @Req() req: any): Promise<{success: boolean}> {
   // Manual check with proper typing
   const userRoles: string = req.user?.roles || [];
   const allowedRoles = ['admin', 'scrum_master'];
@@ -98,7 +95,7 @@ async remove(@Param('id') id: string, @Req() req: any): Promise<void> {
     );
   }
 
-  await this.svc.remove(id);
+   return await this.svc.remove(id);
 }
 
   @Patch(':id/complete')
