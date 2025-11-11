@@ -22,6 +22,7 @@ import { UpdateCommitmentDto } from './dto/update-commitment.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Req } from '@nestjs/common';
 import { ForbiddenException } from '@nestjs/common';
+import { RolesGuard } from './roles.guard';
 
 type TabType = 'All' | 'Upcoming' | 'Due Today' | 'Completed' | 'Archived';
 type SortType = 'dueDate' | 'assignee' | 'updatedAt';
@@ -80,7 +81,7 @@ export class CommitmentsController {
   }
 
   @Delete(':id')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 @HttpCode(HttpStatus.NO_CONTENT)
 async remove(@Param('id') id: string, @Req() req: any): Promise<void> {
   // Manual check with proper typing
