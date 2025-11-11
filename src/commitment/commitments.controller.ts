@@ -83,8 +83,7 @@ export class CommitmentsController {
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('admin','scrum_master')
 async remove(@Param('id') id: string, @Req() req: any): Promise<void> {
-  await this.svc.remove(id);
-  
+
   // Manual check with proper typing
   const userRoles: string = req.user?.roles || [];
   const allowedRoles = ['admin', 'scrum_master'];
