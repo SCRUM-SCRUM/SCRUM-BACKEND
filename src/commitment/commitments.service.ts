@@ -155,7 +155,7 @@ export class CommitmentsService {
   async remove(id: string) {
     const item = await this.findOne(id);
     await this.commitmentModel.deleteOne({ _id: item._id }).exec();
-    this.gateway.broadcast('commitment.deleted', id);
+    this.gateway.broadcast('commitment.deleted', { id });
     return { success: true };
   }
 
