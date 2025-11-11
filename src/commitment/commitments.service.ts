@@ -15,7 +15,7 @@ export class CommitmentsService {
     private readonly gateway: CommitmentsGateway,
   ) {}
 
-  // ✅ Create
+  // Create
   async create(dto: CreateCommitmentDto): Promise<Commitment> {
     const commitment = new this.commitmentModel({
       title: dto.title,
@@ -34,7 +34,7 @@ export class CommitmentsService {
     return saved;
   }
 
-  // ✅ Find One
+  // Find One
   async findOne(id: string): Promise<Commitment> {
     // Validate ObjectId format
     if (!Types.ObjectId.isValid(id)) {
@@ -46,7 +46,7 @@ export class CommitmentsService {
     return item;
   }
 
-  // ✅ List / Filter
+  // List / Filter
   async list(params: {
     tab?: 'All' | 'Upcoming' | 'Due Today' | 'Completed' | 'Archived';
     assigneeId?: string;
@@ -95,7 +95,7 @@ export class CommitmentsService {
     return this.commitmentModel.find(filter).sort(sort).exec();
   }
 
-  // ✅ Update
+  // Update
   async update(id: string, dto: UpdateCommitmentDto): Promise<Commitment> {
     const item = await this.findOne(id);
 
@@ -114,7 +114,7 @@ export class CommitmentsService {
     return saved;
   }
 
-  // ✅ Mark Complete
+  // Mark Complete
   async markComplete(id: string): Promise<Commitment> {
     const item = await this.findOne(id);
     if (item.status === CommitmentStatus.COMPLETED) return item;
@@ -127,7 +127,7 @@ export class CommitmentsService {
     return saved;
   }
 
-  // ✅ Archive
+  // Archive
   async archive(id: string): Promise<Commitment> {
     const item = await this.findOne(id);
     if (!item.archived) {
@@ -139,7 +139,7 @@ export class CommitmentsService {
     return item;
   }
 
-  // ✅ Restore from Archive
+  // Restore from Archive
   async restore(id: string): Promise<Commitment> {
     const item = await this.findOne(id);
     if (item.archived) {
@@ -151,15 +151,15 @@ export class CommitmentsService {
     return item;
   }
 
-  // ✅ Delete
+  // Delete
   async remove(id: string) {
     const item = await this.findOne(id);
     await this.commitmentModel.deleteOne({ _id: item._id }).exec();
-    this.gateway.broadcast('commitment.deleted', { id });
+    this.gateway.broadcast('commitment.deleted', id);
     return { success: true };
   }
 
-  // ✅ Archive Old Completed (24 hrs)
+  // Archive Old Completed (24 hrs)
   async archiveOldCompleted() {
     const boundary = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const old = await this.commitmentModel.find({
