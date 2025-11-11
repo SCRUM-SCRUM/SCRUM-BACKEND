@@ -23,6 +23,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Req } from '@nestjs/common';
 import { ForbiddenException } from '@nestjs/common';
 import { RolesGuard } from './roles.guard';
+import { Roles } from './roles.decorator';
 
 type TabType = 'All' | 'Upcoming' | 'Due Today' | 'Completed' | 'Archived';
 type SortType = 'dueDate' | 'assignee' | 'updatedAt';
@@ -82,6 +83,7 @@ export class CommitmentsController {
 
   @Delete(':id')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles('admin','scrum_master')
 @HttpCode(HttpStatus.NO_CONTENT)
 async remove(@Param('id') id: string, @Req() req: any): Promise<void> {
   // Manual check with proper typing

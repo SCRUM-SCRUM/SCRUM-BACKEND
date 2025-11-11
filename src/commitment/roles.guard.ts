@@ -6,7 +6,7 @@ import { Request } from 'express';
 
 interface AuthenticatedUser {
   id: string;
-  roles: string[];
+  roles: string;
 }
 
 @Injectable()
