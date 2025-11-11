@@ -87,7 +87,7 @@ export class CommitmentsController {
 @HttpCode(HttpStatus.NO_CONTENT)
 async remove(@Param('id') id: string, @Req() req: any): Promise<void> {
   // Manual check with proper typing
-  const userRoles: string[] = req.user?.roles || [];
+  const userRoles: string = req.user?.roles || [];
   const allowedRoles = ['admin', 'scrum_master'];
   
   const hasRole = allowedRoles.some(role => userRoles.includes(role));

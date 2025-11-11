@@ -1,6 +1,5 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable prettier/prettier */
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -32,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     userId: string;
     email: string;
     name?: string;
-    role: string;
+    roles: string[]; 
   }> {
     console.log('JWT validated:', payload);
 
@@ -46,7 +45,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       userId: user.id,
       email: user.email,
       name: payload.name,
-      role: payload.role,
+      roles: [payload.role],
     };
   }
 }
